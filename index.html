@@ -3,74 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pingu Quest: Natural Wonders</title>
+    <title>Pingu Quest Pro</title>
     <style>
-        :root { --p-blue: #00A8FF; --p-pink: #FF4D91; --p-green: #4CD137; --p-purple: #9c27b0; }
+        :root { --p-blue: #00A8FF; --p-pink: #FF4D91; --p-green: #4CD137; }
         html, body { 
             overscroll-behavior: none; overflow: hidden; position: fixed; 
-            width: 100%; height: 100%; margin: 0; font-family: 'Comic Sans MS', cursive;
-            background: #E0F7FA; touch-action: none; -webkit-user-select: none;
+            width: 100%; height: 100%; margin: 0; font-family: 'Arial Rounded MT Bold', sans-serif;
+            background: #87CEEB; touch-action: none;
         }
         .screen { display: none; height: 100vh; width: 100vw; flex-direction: column; align-items: center; }
         .active { display: flex; }
 
-        /* --- NOUA HARTĂ STILIZATĂ --- */
+        /* HARTA CU FUNDAL AI (Nu se blochează) */
         #map-container { 
-    width: 100%; 
-    flex-grow: 1; 
-    position: relative; 
-    /* ACESTA ESTE LINK-UL DIRECT: */
-    background-image: url('https://i.ibb.co/680LhS5/map-design.jpg'); 
-    background-size: 100% 100%; 
-    background-position: center;
-    background-repeat: no-repeat;
-    overflow: hidden;
-}
+            width: 100%; flex-grow: 1; position: relative; 
+            background-image: url('https://image.pollinations.ai/prompt/beautiful_cartoon_game_map_with_winding_path_jungle_farm_ocean_colors_high_detail?width=1024&height=1024&seed=42');
+            background-size: cover; background-position: center;
+        }
         
-        /* Nodul de nivel (cercul cu număr) */
         .level-node { 
-            width: 45px; height: 45px; background: white; border-radius: 50%; 
+            width: 50px; height: 50px; background: white; border-radius: 50%; 
             display: flex; align-items: center; justify-content: center; 
-            font-size: 16px; font-weight: bold; border: 4px solid #ccc; 
-            position: absolute; color: #999; z-index: 5; transition: 0.3s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            cursor: pointer;
+            font-size: 18px; font-weight: bold; border: 4px solid #fff; 
+            position: absolute; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 5;
         }
+        .level-unlocked { background: var(--p-blue); color: white; border-color: #fff; }
+        .level-current { background: var(--p-green); color: white; border-color: #fff; transform: scale(1.2); animation: pulse 1.5s infinite; }
+        
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0px rgba(76, 209, 55, 0.7); } 100% { box-shadow: 0 0 0 15px rgba(76, 209, 55, 0); } }
 
-        .level-unlocked { border-color: var(--p-blue); color: var(--p-blue); }
-        .level-current { 
-            border-color: var(--p-green); background: var(--p-green); color: white; 
-            transform: scale(1.1); box-shadow: 0 0 15px var(--p-green); 
-        }
-
-        /* Avatar Dinamic pe hartă (Cățel, Papagal etc.) */
+        /* AVATAR REPARAT (PINGUIN ADEVĂRAT) */
         #dynamic-avatar {
-            position: absolute; width: 80px; height: 80px; z-index: 10;
+            position: absolute; width: 70px; height: 70px; z-index: 10;
             background-size: contain; background-repeat: no-repeat; background-position: center;
-            transition: all 0.5s ease-in-out; pointer-events: none;
-            filter: drop-shadow(0 5px 8px rgba(0,0,0,0.4));
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
         }
 
-        /* UI Pop-up și Joc (rămân neschimbate) */
-        #win-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 30px; border: 6px solid var(--p-green); text-align: center; z-index: 9999; width: 260px; box-shadow: 0 0 100px rgba(0,0,0,0.4); }
-        .piece { width: 100px; height: 100px; background-size: 300px 300px; border-radius: 10px; position: absolute; z-index: 100; box-shadow: 0 4px 8px rgba(0,0,0,0.3); touch-action: none; }
-        .piece:active { scale: 1.1; z-index: 1000; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
-        .top-bar { width: 100%; height: 50px; background: white; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 1000; }
-        .btn { padding: 10px 20px; border: none; border-radius: 20px; font-weight: bold; color: white; background: var(--p-blue); cursor: pointer; }
+        /* PIESE PUZZLE */
+        #game-area { position: relative; width: 320px; height: 400px; margin-top: 20px; }
+        #puzzle-slots { display: grid; grid-template-columns: repeat(3, 100px); gap: 5px; padding: 10px; background: rgba(255,255,255,0.3); border-radius: 15px; }
+        .slot { width: 100px; height: 100px; background: rgba(255,255,255,0.5); border-radius: 10px; border: 2px dashed #fff; }
+        .piece { width: 100px; height: 100px; background-size: 300px 300px; border-radius: 10px; position: absolute; z-index: 100; cursor: grab; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
+        .top-bar { width: 100%; height: 60px; background: white; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 100; }
+        #win-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 30px; text-align: center; z-index: 2000; box-shadow: 0 0 50px rgba(0,0,0,0.5); border: 8px solid var(--p-green); }
     </style>
 </head>
 <body>
 
     <div id="win-popup">
-        <h2 style="color: var(--p-green); margin: 0;">🎉 BRAVO! 🎉</h2>
-        <p>Ai completat puzzle-ul!</p>
-        <button class="btn" style="background: var(--p-green);" onclick="closeWinPopup()">HARTĂ</button>
+        <h1 style="color: var(--p-green);">BRAVO! 🌟</h1>
+        <button onclick="closeWinPopup()" style="padding: 15px 30px; background: var(--p-green); color: white; border: none; border-radius: 25px; font-weight: bold; font-size: 18px;">URMĂTORUL NIVEL</button>
     </div>
 
     <div class="top-bar">
-        <div id="category-label" style="font-size: 14px; font-weight: bold; color: var(--p-purple);">Aventura</div>
-        <div style="font-size: 18px;">⭐ <span id="stars-val">0</span></div>
-        <button class="btn" onclick="showScreen('screen-map')">HARTĂ</button>
+        <b id="category-name" style="color: var(--p-blue);">AVENTURA</b>
+        <div style="font-size: 20px;">⭐ <span id="stars-val">0</span></div>
+        <button onclick="showScreen('screen-map')" style="padding: 8px 15px; border-radius: 15px; border: none; background: #eee;">HARTĂ</button>
     </div>
 
     <div id="screen-map" class="screen active">
@@ -81,104 +71,65 @@
     </div>
 
     <div id="screen-game" class="screen">
-        <div style="text-align: center; margin: 10px;">
-            <div id="cur-cat" style="font-size: 12px; color: #666;"></div>
-            <div id="cur-name" style="font-size: 20px; color: var(--p-pink); font-weight: bold;"></div>
-        </div>
+        <h2 id="level-title" style="margin-top: 20px; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);"></h2>
         <div id="game-area">
             <div id="puzzle-slots"></div>
         </div>
     </div>
 
     <script>
-        // COORDONATELE FIXE ALE NODURILOR (X, Y in %)
-        const nodePositions = {
-            1: { x: 50, y: 80 },  // START
-            15: { x: 25, y: 70 }, // Junglă
-            30: { x: 35, y: 60 },
-            45: { x: 50, y: 50 }, // Fermă
-            60: { x: 65, y: 45 },
-            75: { x: 70, y: 35 }, // Cer
-            90: { x: 75, y: 25 },
-            105: { x: 85, y: 15 }, // Ocean
-            120: { x: 50, y: 10 }  // WINNER
+        // AVATARE (Am pus link-uri de iconițe profesionale care NU se blochează)
+        const avatarImgs = {
+            "Sălbatice": "https://cdn-icons-png.flaticon.com/512/3590/3590390.png", // Pinguin cool
+            "Domestice": "https://cdn-icons-png.flaticon.com/512/1998/1998627.png", // Cățeluș
+            "Pasări": "https://cdn-icons-png.flaticon.com/512/2503/2503830.png",    // Papagal
+            "Subacvatice": "https://cdn-icons-png.flaticon.com/512/2123/2123714.png" // Pește
         };
 
-        const avatars = {
-            "Sălbatice": "https://cdn-icons-png.flaticon.com/512/2823/2823055.png",
-            "Domestice": "https://cdn-icons-png.flaticon.com/512/616/616408.png",
-            "Pasări": "https://cdn-icons-png.flaticon.com/512/2503/2503830.png",
-            "Subacvatice": "https://cdn-icons-png.flaticon.com/512/2123/2123714.png"
+        const nodePos = {
+            1: {x: 50, y: 85}, 15: {x: 20, y: 75}, 30: {x: 45, y: 65}, 
+            45: {x: 75, y: 55}, 60: {x: 50, y: 45}, 75: {x: 20, y: 35}, 
+            90: {x: 40, y: 25}, 105: {x: 70, y: 15}, 120: {x: 50, y: 5}
         };
 
         const categories = ["Sălbatice", "Domestice", "Pasări", "Subacvatice"];
-        const levels = [];
-        categories.forEach(catName => {
-            for(let i=1; i<=30; i++) {
-                levels.push({ 
-                    name: `Nivel ${i}`, 
-                    cat: catName, 
-                    img: `https://image.pollinations.ai/prompt/cute_cartoon_${catName.toLowerCase()}_animal_square?width=300&height=300&seed=${i}`
-                });
-            }
-        });
-
         let stars = parseInt(localStorage.getItem('pq_stars')) || 0;
         let unlocked = parseInt(localStorage.getItem('pq_unlocked')) || 1;
 
         function initMap() {
             const path = document.getElementById('levels-path');
             path.innerHTML = '';
-            
-            // Generăm noduri doar pentru punctele cheie (1, 15, 30, 45...) definite în nodePositions
-            Object.keys(nodePositions).forEach(numStr => {
-                const num = parseInt(numStr);
-                if (num > levels.length) return; // Siguranță
-
-                const pos = nodePositions[num];
+            Object.keys(nodePos).forEach(num => {
                 const n = document.createElement('div');
-                n.className = `level-node ${num < unlocked ? 'level-unlocked' : (num === unlocked ? 'level-current' : '')}`;
-                n.innerText = num <= unlocked ? num : '🔒';
-                n.id = `node-${num}`;
-                
-                // Poziționăm nodul exact pe drumul din imagine
-                n.style.left = `calc(${pos.x}% - 22.5px)`; // Ajustăm pentru centrul cercului
-                n.style.top = `calc(${pos.y}% - 22.5px)`;
-                
+                n.className = `level-node ${num < unlocked ? 'level-unlocked' : (num == unlocked ? 'level-current' : '')}`;
+                n.style.left = nodePos[num].x + '%';
+                n.style.top = nodePos[num].y + '%';
+                n.innerText = num;
                 n.onclick = () => { if(num <= unlocked) startLevel(num); };
                 path.appendChild(n);
             });
-            
+            updateAvatar();
             document.getElementById('stars-val').innerText = stars;
-            setTimeout(updateAvatar, 200);
         }
 
         function updateAvatar() {
-            const node = document.getElementById(`node-${unlocked}`);
             const av = document.getElementById('dynamic-avatar');
-            
-            if(node && av) {
-                const cur = levels[unlocked - 1];
-                av.style.backgroundImage = `url('${avatars[cur.cat]}')`;
-                
-                // Poziționăm avatarul fix peste nodul curent
-                const rect = node.getBoundingClientRect();
-                const containerRect = document.getElementById('map-container').getBoundingClientRect();
-                
-                av.style.left = (rect.left - containerRect.left - 17.5) + 'px'; // Ajustat pentru centru
-                av.style.top = (rect.top - containerRect.top - 60) + 'px'; // Ridicat puțin deasupra
-            }
+            const pos = nodePos[unlocked] || nodePos[1];
+            const cat = categories[Math.floor((unlocked-1)/30)];
+            av.style.backgroundImage = `url('${avatarImgs[cat]}')`;
+            av.style.left = `calc(${pos.x}% - 35px)`;
+            av.style.top = `calc(${pos.y}% - 70px)`;
         }
 
         function startLevel(id) {
-            const l = levels[id-1];
-            document.getElementById('cur-cat').innerText = l.cat;
-            document.getElementById('cur-name').innerText = l.name;
+            const cat = categories[Math.floor((id-1)/30)];
+            document.getElementById('level-title').innerText = `${cat} - Nivel ${id}`;
             showScreen('screen-game');
-            setupPuzzle(l.img);
+            // Imagine puzzle generată AI special pentru nivelul respectiv
+            const puzzleImg = `https://image.pollinations.ai/prompt/cute_cartoon_${cat.toLowerCase()}_animal_level_${id}_square?width=300&height=300&seed=${id}`;
+            setupPuzzle(puzzleImg);
         }
 
-        // --- SISTEMUL DE JOC ȘI PUZZLE (rămân neschimbate) ---
         function setupPuzzle(img) {
             const area = document.getElementById('game-area');
             document.querySelectorAll('.piece').forEach(p => p.remove());
@@ -195,35 +146,32 @@
                 p.style.left = (5 + (i%3) * 110) + 'px';
                 
                 let sX, sY, iX, iY;
+                const move = (e) => {
+                    const t = e.touches[0];
+                    p.style.left = (iX + (t.clientX - sX)) + 'px';
+                    p.style.top = (iY + (t.clientY - sY)) + 'px';
+                };
+
                 p.addEventListener('touchstart', (e) => {
                     const t = e.touches[0]; sX = t.clientX; sY = t.clientY;
                     iX = p.offsetLeft; iY = p.offsetTop; p.style.zIndex = 1000;
-                }, {passive: false});
+                    window.addEventListener('touchmove', move, {passive:false});
+                });
 
-                p.addEventListener('touchmove', (e) => {
-                    e.preventDefault();
-                    const t = e.touches[0];
-                    p.style.left = (iX + (t.clientX - sX)) + 'px';
-                    p.style.top = (initY + (t.clientY - startY)) + 'px';
-                }, {passive: false});
-
-                p.addEventListener('touchend', () => {
+                window.addEventListener('touchend', () => {
+                    window.removeEventListener('touchmove', move);
                     p.style.zIndex = 100;
                     const r = p.getBoundingClientRect();
-                    const cx = r.left + 50, cy = r.top + 50;
-                    let hit = false;
                     document.querySelectorAll('.slot').forEach((s, sIdx) => {
                         const sr = s.getBoundingClientRect();
-                        if(cx > sr.left && cx < sr.right && cy > sr.top && cy < sr.bottom) {
-                            const ar = area.getBoundingClientRect();
-                            p.style.left = (sr.left - ar.left) + 'px';
-                            p.style.top = (sr.top - ar.top) + 'px';
+                        if(Math.abs(r.left - sr.left) < 40 && Math.abs(r.top - sr.top) < 40) {
+                            p.style.left = (sr.left) + 'px';
+                            p.style.top = (sr.top - document.querySelector('.top-bar').offsetHeight - 60) + 'px';
                             p.dataset.slot = sIdx;
-                            hit = true; checkWin();
+                            checkWin();
                         }
                     });
-                    if(!hit) p.dataset.slot = -1;
-                });
+                }, {once: true});
                 area.appendChild(p);
             });
         }
@@ -233,7 +181,7 @@
             const correct = [...ps].filter(p => p.dataset.slot == p.dataset.correct).length;
             if(correct === 9) {
                 document.getElementById('win-popup').style.display = 'block';
-                if(unlocked < levels.length) unlocked++;
+                if(unlocked < 120) unlocked++;
                 stars += 10;
                 localStorage.setItem('pq_stars', stars);
                 localStorage.setItem('pq_unlocked', unlocked);
@@ -249,13 +197,9 @@
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            if(id === 'screen-map') setTimeout(updateAvatar, 100);
         }
 
         initMap();
-        document.addEventListener('touchmove', (e) => { 
-            if(!e.target.closest('#map-container')) e.preventDefault(); 
-        }, {passive: false});
     </script>
 </body>
 </html>
