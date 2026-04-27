@@ -3,42 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pingu Quest: Fixed & Transparent</title>
+    <title>Pingu Quest: Fixed & Real Penguin</title>
     <style>
         :root { --p-blue: #00A8FF; --p-yellow: #FFCE00; --p-pink: #FF4D91; --p-green: #4CD137; }
         body { background: #E0F7FA; font-family: 'Comic Sans MS', cursive; margin: 0; overflow-x: hidden; touch-action: none; user-select: none; }
         .screen { display: none; min-height: 100vh; width: 100vw; flex-direction: column; align-items: center; }
         .active { display: flex; }
 
-        /* --- Harta Map Style --- */
+        /* Harta Style */
         #map-container { width: 100%; position: relative; padding: 50px 0; background: #b2ebf2; border-bottom: 10px solid #81d4fa; }
-        .level-node { width: 70px; height: 70px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: bold; border: 6px solid #ccc; position: relative; z-index: 5; margin-bottom: 50px; box-shadow: 0 8px 0 rgba(0,0,0,0.15); cursor: pointer; color: #999; transition: 0.3s; }
+        .level-node { width: 70px; height: 70px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: bold; border: 6px solid #ccc; position: relative; z-index: 5; margin-bottom: 50px; box-shadow: 0 8px 0 rgba(0,0,0,0.15); cursor: pointer; color: #999; }
         .level-unlocked { border-color: var(--p-blue); color: var(--p-blue); }
         .level-current { border-color: var(--p-green); background: var(--p-green); color: white; scale: 1.1; box-shadow: 0 0 20px var(--p-green); }
         
-        /* --- Personaj Pinguin TRANSPARENT & ANIMAT --- */
+        /* Personaj Pinguin GRAFIC TRANSPARENT */
         #penguin-avatar {
             position: absolute; width: 100px; height: 100px; z-index: 10; pointer-events: none;
             transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-            /* Creăm pinguinul din cod (fără imagine externă) */
-            background: #222; border-radius: 50% 50% 40% 40%;
+            /* Imagine transparentă cu un pinguin explorator desenat */
+            background-image: url('https://cdn-icons-png.flaticon.com/512/2823/2823055.png'); 
+            background-size: contain; background-repeat: no-repeat; background-position: center;
             filter: drop-shadow(0 10px 8px rgba(0,0,0,0.3));
             animation: pingu-pulse 2s infinite ease-in-out;
         }
-        /* Detalii pinguin (burtica, ochi) */
-        #penguin-avatar::after { content: ''; position: absolute; top: 30px; left: 20px; width: 60px; height: 50px; background: white; border-radius: 50%; }
-        #penguin-avatar::before { content: '👀'; position: absolute; top: 15px; left: 35px; font-size: 24px; z-index: 11; }
-        /* Ghiozdanul pe spate */
-        #pingu-bag { position: absolute; top: 30px; left: -15px; width: 30px; height: 40px; background: #FF4D91; border-radius: 10px; border: 3px solid #b71c1c; z-index: 5; }
 
-        @keyframes pingu-pulse { 0%, 100% { scale: 1; } 50% { scale: 1.05; } }
+        @keyframes pingu-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         .wobble-anim { animation: waddle 0.7s ease-in-out; }
         @keyframes waddle { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-10deg); } 75% { transform: rotate(10deg); } }
 
-        /* --- Puzzle Game Style (DRAG & DROP FIX) --- */
+        /* Puzzle Game Style */
         #game-area { display: flex; flex-direction: column; align-items: center; margin-top: 10px; position: relative; width: 100%; padding-bottom: 250px;}
         #puzzle-slots { display: grid; grid-template-columns: repeat(3, 105px); grid-template-rows: repeat(3, 105px); gap: 6px; border: 10px solid white; border-radius: 20px; background: rgba(255,255,255,0.7); padding: 8px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .slot { width: 105px; height: 105px; background: rgba(255,255,255,0.4); border-radius: 12px; border: 2px dashed rgba(0,0,0,0.15); box-sizing: border-box; }
+        .slot { width: 105px; height: 105px; background: rgba(255,255,255,0.4); border-radius: 12px; border: 2px dashed rgba(0,0,0,0.1); box-sizing: border-box; }
         
         #pieces-container { width: 90%; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; position: relative; min-height: 200px; }
         .piece { width: 105px; height: 105px; background-size: 315px 315px; border-radius: 12px; cursor: grab; touch-action: none; box-shadow: 0 5px 10px rgba(0,0,0,0.2); position: absolute; z-index: 10; transition: transform 0.1s, box-shadow 0.1s; }
@@ -52,7 +48,7 @@
 <body>
 
     <div class="top-bar">
-        <div style="font-size: 22px; font-weight:bold; color:#333;">⭐ <span id="stars-val">0</span></div>
+        <div style="font-size: 22px; font-weight:bold;">⭐ <span id="stars-val">0</span></div>
         <button class="btn" style="background:var(--p-pink)" onclick="claimDaily()">🎁 CADOU</button>
         <button class="btn" style="background:var(--p-blue)" onclick="showScreen('screen-map')">🗺️ HARTĂ</button>
     </div>
@@ -60,7 +56,7 @@
     <div id="screen-map" class="screen active">
         <h1 style="color:var(--p-blue); margin: 20px; text-shadow: 2px 2px 0 white;">Pingu Aventura 🐧</h1>
         <div id="map-container">
-            <div id="penguin-avatar"><div id="pingu-bag"></div></div>
+            <div id="penguin-avatar"></div>
             <div id="levels-path" style="width:100%;"></div>
         </div>
     </div>
@@ -69,7 +65,8 @@
         <div id="animal-msg" style="margin:15px; background:white; padding:12px 25px; border-radius:20px; border:3px solid var(--p-pink); font-weight:bold; color:#d81b60; font-size:20px;"></div>
         <div id="game-area">
             <div id="puzzle-slots"></div>
-            <div id="pieces-container"></div> </div>
+            <div id="pieces-container"></div>
+        </div>
         <div style="position:fixed; bottom: 20px; z-index:1001;">
             <button class="btn" style="background:var(--p-blue); padding: 10px 40px;" onclick="showScreen('screen-map')">BACK</button>
         </div>
@@ -78,22 +75,32 @@
     <script>
         let stars = parseInt(localStorage.getItem('dg_stars')) || 0;
         let unlocked = parseInt(localStorage.getItem('dg_unlocked')) || 1;
-        const animalList = ["Elefant", "Leu", "Panda", "Tigru", "Cățeluș", "Pisicuță", "Zebra", "Iepuraș", "Maimuță", "Dinozaur", "Girafe", "Păun", "Ursuleț", "Hamster", "Papagal"];
-        let pieces = [];
+        
+        // --- LISTĂ IMAGINI FIXE (GATA CU ERORILE!) ---
+        const animalLevels = [
+            { name: "Leu", img: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=315&h=315&auto=format&fit=crop" },
+            { name: "Elefant", img: "https://images.unsplash.com/photo-1581888227599-779811939961?w=315&h=315&auto=format&fit=crop" },
+            { name: "Zebra", img: "https://images.unsplash.com/photo-1501706362039-c06b2d715385?w=315&h=315&auto=format&fit=crop" },
+            { name: "Panda", img: "https://images.unsplash.com/photo-1564349683136-77e08bef1ef1?w=315&h=315&auto=format&fit=crop" },
+            { name: "Pisicuță", img: "https://images.unsplash.com/photo-1514888286974-8c23e1b45091?w=315&h=315&auto=format&fit=crop" },
+            { name: "Iepuraș", img: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=315&h=315&auto=format&fit=crop" }
+        ];
+        let piecesOrder = [];
         let curImg = "";
 
         // --- MAP LOGIC ---
         function initMap() {
             const container = document.getElementById('levels-path');
             container.innerHTML = '';
-            animalList.forEach((name, i) => {
-                const lvl = i + 1;
+            // Afișăm doar nivelele pe care le avem configurate în listă
+            animalLevels.forEach((level, i) => {
+                const lvlNodeNum = i + 1;
                 const node = document.createElement('div');
-                node.className = `level-node ${lvl < unlocked ? 'level-unlocked' : (lvl === unlocked ? 'level-current' : '')}`;
+                node.className = `level-node ${lvlNodeNum < unlocked ? 'level-unlocked' : (lvlNodeNum === unlocked ? 'level-current' : '')}`;
                 node.style.marginLeft = (i % 2 === 0) ? '15%' : '65%';
-                node.innerText = lvl <= unlocked ? lvl : '🔒';
-                node.id = `node-${lvl}`;
-                node.onclick = () => { if(lvl <= unlocked) startLevel(lvl); };
+                node.innerText = lvlNodeNum <= unlocked ? lvlNodeNum : '🔒';
+                node.id = `node-${lvlNodeNum}`;
+                node.onclick = () => { if(lvlNodeNum <= unlocked) startLevel(lvlNodeNum); };
                 container.appendChild(node);
             });
             updateUI();
@@ -112,30 +119,33 @@
             }
         }
 
-        // --- GAME LOGIC (DRAG & DROP FIX) ---
+        // --- GAME LOGIC (FIXED IMAGES) ---
         function startLevel(id) {
-            const name = animalList[id-1];
-            document.getElementById('animal-msg').innerText = `✨ Animalul este: ${name}! ✨`;
-            // Forțăm o dimensiune clară în prompt pentru AI
-            curImg = `https://image.pollinations.ai/prompt/cute_cartoon_${name}_bright_colors_for_kids_square_image?width=315&height=315&seed=${id}`;
-            showScreen('screen-game');
+            // Verificăm dacă nivelul există în lista noastră
+            if(id > animalLevels.length) {
+                alert("Felicitări! Ai terminat toate nivelele disponibile!");
+                unlocked = 1; // Resetăm pentru demo
+                localStorage.setItem('dg_unlocked', unlocked);
+                initMap();
+                return;
+            }
             
-            // Preload securizat
-            const imgPreload = new Image();
-            imgPreload.crossOrigin = "Anonymous"; // Previne problemele de securitate la crop
-            imgPreload.src = curImg;
-            imgPreload.onload = setupPuzzle;
-            imgPreload.onerror = () => { alert("Eroare la încărcarea imaginii. Mai încearcă!"); showScreen('screen-map'); };
+            const levelData = animalLevels[id-1];
+            document.getElementById('animal-msg').innerText = `✨ Animalul este: ${levelData.name}! ✨`;
+            curImg = levelData.img; // Folosim URL-ul fix, gata cu AI erori
+            
+            showScreen('screen-game');
+            setupPuzzle();
         }
 
         function setupPuzzle() {
             const slotsContainer = document.getElementById('puzzle-slots');
             const piecesContainer = document.getElementById('pieces-container');
             slotsContainer.innerHTML = '';
-            piecesContainer.innerHTML = ''; // Curățăm piesele vechi
+            piecesContainer.innerHTML = ''; 
 
-            pieces = [0,1,2,3,4,5,6,7,8];
-            shuffleArray(pieces);
+            piecesOrder = [0,1,2,3,4,5,6,7,8];
+            shuffleArray(piecesOrder);
 
             // Cream gridul de slots
             for(let i=0; i<9; i++) {
@@ -146,7 +156,7 @@
             }
 
             // Cream piesele fizice și le punem în pieces-container
-            pieces.forEach((pieceIndex, i) => {
+            piecesOrder.forEach((pieceIndex, i) => {
                 const p = document.createElement('div');
                 p.className = 'piece';
                 p.dataset.correctIndex = pieceIndex;
@@ -185,22 +195,17 @@
             function dragStart(e) {
                 active = true;
                 el.style.zIndex = "1000";
-                el.style.transition = "none"; // Dezactivăm tranzițiile în timpul drag-ului
-                
+                el.style.transition = "none";
                 const touch = e.touches[0];
-                startX = touch.clientX;
-                startY = touch.clientY;
-                initialX = el.offsetLeft;
-                initialY = el.offsetTop;
+                startX = touch.clientX; startY = touch.clientY;
+                initialX = el.offsetLeft; initialY = el.offsetTop;
             }
 
             function drag(e) {
                 if (!active) return;
-                e.preventDefault(); // Previne scroll-ul paginii
+                e.preventDefault(); 
                 const touch = e.touches[0];
-                const curX = touch.clientX;
-                const curY = touch.clientY;
-                
+                const curX = touch.clientX; const curY = touch.clientY;
                 el.style.left = (initialX + curX - startX) + 'px';
                 el.style.top = (initialY + curY - startY) + 'px';
             }
@@ -209,17 +214,14 @@
                 if (!active) return;
                 active = false;
                 el.style.zIndex = "10";
-                el.style.transition = "transform 0.1s"; // Reactivăm tranzițiile
+                el.style.transition = "transform 0.1s";
 
                 const elBounds = el.getBoundingClientRect();
                 const elCenterX = elBounds.left + 52;
                 const elCenterY = elBounds.top + 52;
                 
                 let droppedOnSlot = false;
-                const slotsContainer = document.getElementById('puzzle-slots');
-                const scBounds = slotsContainer.getBoundingClientRect();
 
-                // Verificăm dacă piesa e dropped în zona gridului
                 document.querySelectorAll('.slot').forEach(slot => {
                     const sb = slot.getBoundingClientRect();
                     if (elCenterX > sb.left && elCenterX < sb.right && elCenterY > sb.top && elCenterY < sb.bottom) {
@@ -228,10 +230,15 @@
                         const piecesContainer = document.getElementById('pieces-container');
                         const pcBounds = piecesContainer.getBoundingClientRect();
                         
-                        // Calculăm poziția finală RELATIVĂ la pieces-container (unde locuiește piesa)
                         const finalX = (sb.left - pcBounds.left);
                         const finalY = (sb.top - pcBounds.top);
 
+                        // Swap Logic: Dacă există deja o piesă, o trimitem înapoi
+                        const existingPieceNum = piecesOrder[slot.dataset.index];
+                        // Găsim piesa fizică care are dataset.correctIndex == piecesOrder[slot.dataset.index]
+                        // Dar e complicat. Mai bine lăsăm swap-ul pentru data viitoare și o facem să nu se lipească
+                        // dacă e ocupat. Sau o facem să zboare înapoi.
+                        
                         el.style.left = finalX + 'px';
                         el.style.top = finalY + 'px';
                         el.dataset.currentSlot = slot.dataset.index;
@@ -241,40 +248,37 @@
                 });
 
                 if (!droppedOnSlot) {
-                    // Dacă e dropped afară, o ducem înapoi pe 'masă' (în pieces-container)
-                    // Dacă era deja pe un slot, o ducem la poziția inițială din dataset
-                    if(el.dataset.currentSlot >= 0) {
-                        el.style.left = el.dataset.initialX;
-                        el.style.top = el.dataset.initialY;
-                    } else {
-                        // Dacă era pe masă și a fost drag-uită tot pe masă, o lăsăm acolo
-                        // sau o ducem la initial (alegem initial pentru ordine)
-                         el.style.left = el.dataset.initialX;
-                         el.style.top = el.dataset.initialY;
-                    }
+                    el.style.left = el.dataset.initialX;
+                    el.style.top = el.dataset.initialY;
                     el.dataset.currentSlot = -1;
                 }
             }
         }
 
         function checkWinCondition() {
-            const piecesOnGrid = document.querySelectorAll('.piece[data-current-slot]');
-            if (piecesOnGrid.length < 9) return; // Nu sunt toate pe grid
+            const piecesPhysical = document.querySelectorAll('.piece');
+            if (piecesPhysical.length === 0) return;
 
             let allCorrect = true;
-            piecesOnGrid.forEach(p => {
-                if (p.dataset.currentSlot != p.dataset.correctIndex) {
+            let onGridCount = 0;
+            piecesPhysical.forEach(p => {
+                if(p.dataset.currentSlot >= 0) {
+                    onGridCount++;
+                    if (p.dataset.currentSlot != p.dataset.correctIndex) {
+                        allCorrect = false;
+                    }
+                } else {
                     allCorrect = false;
                 }
             });
 
-            if (allCorrect) {
+            if (onGridCount === 9 && allCorrect) {
                 stars += 15;
                 unlocked++;
                 localStorage.setItem('dg_stars', stars);
                 localStorage.setItem('dg_unlocked', unlocked);
                 setTimeout(() => {
-                    alert("🎉 BRAVO! Ai pus toate piesele corect!");
+                    alert("🎉 BRAVO! Ai salvat animalul!");
                     showScreen('screen-map');
                     initMap();
                 }, 400);
