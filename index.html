@@ -1,177 +1,49 @@
-<!DOCTYPE html>
-<html lang="ro">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pingu Quest Fix</title>
-    <style>
-        :root { --p-blue: #00A8FF; --p-green: #4CD137; }
-        body { 
-            margin: 0; padding: 0; overflow: hidden; position: fixed; width: 100%; height: 100%;
-            font-family: sans-serif; background: #e0f7fa; touch-action: none;
-        }
-        .screen { display: none; height: 100vh; width: 100vw; flex-direction: column; align-items: center; }
-        .active { display: flex; }
+#include <Servo.h>
 
-        /* HARTA */
-        #map-container { width: 100%; flex-grow: 1; position: relative; overflow-y: auto; background: #81d4fa; }
-        .level-node { 
-            width: 50px; height: 50px; background: white; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 18px; font-weight: bold; border: 4px solid #fff; 
-            position: absolute; box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 5;
-        }
-        .level-current { background: var(--p-green); color: white; transform: scale(1.1); border-color: #ffd700; }
-        
-        #dynamic-avatar {
-            position: absolute; width: 60px; height: 60px; z-index: 10;
-            background-image: url('https://cdn-icons-png.flaticon.com/512/1067/1067357.png');
-            background-size: contain; background-repeat: no-repeat; background-position: center;
-            transition: all 0.4s ease; pointer-events: none;
-        }
+// Definire pini
+const int servoPin = 9;      // Pinul pentru servomotor
+const int sensorPin = A0;    // Pinul analogic pentru senzorul de umiditate/apă
 
-        /* PUZZLE REPARAT (Mai mic ca să încapă) */
-        .top-bar { width: 100%; height: 50px; background: white; display: flex; justify-content: space-around; align-items: center; border-bottom: 2px solid #ddd; }
-        #game-area { position: relative; width: 260px; height: 480px; margin-top: 10px; }
-        #puzzle-slots { display: grid; grid-template-columns: repeat(3, 80px); gap: 5px; padding: 5px; background: rgba(0,0,0,0.1); border-radius: 10px; }
-        .slot { width: 80px; height: 80px; background: #fff; border-radius: 5px; border: 1px dashed #ccc; }
-        .piece { 
-            width: 80px; height: 80px; background-size: 240px 240px; 
-            border-radius: 8px; position: absolute; z-index: 100; 
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3); touch-action: none;
-        }
-    </style>
-</head>
-<body>
+// Setări praguri
+const int pragDetectie = 500; // Ajustează valoarea în funcție de sensibilitatea senzorului
 
-    <div class="top-bar">
-        <b id="cat-label">PINGU ADVENTURE</b>
-        <div>⭐ <span id="stars-val">0</span></div>
-        <button onclick="showScreen('screen-map')" style="border-radius:10px; border:1px solid #ccc; padding:5px 10px;">HARTĂ</button>
-    </div>
+Servo bratServo; // Crearea obiectului Servo
 
-    <div id="screen-map" class="screen active">
-        <div id="map-container">
-            <div id="dynamic-avatar"></div>
-            <div id="levels-path"></div>
-        </div>
-    </div>
+void setup() {
+  // Inițializare comunicare serială pentru monitorizare
+  Serial.begin(9600);
+  
+  // Atașarea servomotorului la pinul configurat
+  bratServo.attach(servoPin);
+  
+  // Setare poziție inițială (0 grade)
+  bratServo.write(0);
+  
+  Serial.println("Sistem pornit. Aștept detectare...");
+}
 
-    <div id="screen-game" class="screen">
-        <h3 id="lvl-txt" style="margin: 10px;"></h3>
-        <div id="game-area">
-            <div id="puzzle-slots"></div>
-        </div>
-    </div>
+void loop() {
+  // Citire valoare de la senzor
+  int valoareSenzor = analogRead(sensorPin);
+  
+  // Afișare valoare în Serial Monitor (ajută la calibrare)
+  Serial.print("Valoare senzor: ");
+  Serial.println(valoareSenzor);
 
-    <script>
-        // Sursă de imagini ultra-stabilă (Random Cats & Nature)
-        const getImg = (id) => `https://picsum.photos/id/${(id % 50) + 10}/300/300`;
+  // Verificare condiție
+  if (valoareSenzor > pragDetectie) {
+    Serial.println("Obiect/Apă detectată! Mișcare servo la 90 grade.");
+    
+    // Mută servomotorul la 90 de grade
+    bratServo.write(90);
+    
+    // Menține poziția (de exemplu, 2 secunde)
+    delay(2000);
+  } else {
+    // Dacă nu detectează nimic, revine la 0 grade
+    bratServo.write(0);
+  }
 
-        let stars = parseInt(localStorage.getItem('pq_stars')) || 0;
-        let unlocked = parseInt(localStorage.getItem('pq_unlocked')) || 1;
-
-        function initMap() {
-            const pathDiv = document.getElementById('levels-path');
-            pathDiv.innerHTML = '';
-            for(let i=1; i<=120; i++) {
-                const n = document.createElement('div');
-                n.className = `level-node ${i == unlocked ? 'level-current' : ''}`;
-                const x = 50 + Math.sin(i * 0.6) * 30;
-                const y = 3000 - (i * 70); 
-                n.style.left = x + '%';
-                n.style.top = y + 'px';
-                n.innerText = i;
-                n.onclick = () => { if(i <= unlocked) startLevel(i); };
-                pathDiv.appendChild(n);
-            }
-            document.getElementById('stars-val').innerText = stars;
-            updateAvatar();
-        }
-
-        function updateAvatar() {
-            const nodes = document.querySelectorAll('.level-node');
-            const target = nodes[unlocked-1];
-            const av = document.getElementById('dynamic-avatar');
-            if(target) {
-                av.style.left = (target.offsetLeft - 5) + 'px';
-                av.style.top = (target.offsetTop - 50) + 'px';
-                target.scrollIntoView({ behavior: 'auto', block: 'center' });
-            }
-        }
-
-        function startLevel(id) {
-            document.getElementById('lvl-txt').innerText = `Nivel ${id}`;
-            showScreen('screen-game');
-            setupPuzzle(getImg(id));
-        }
-
-        function setupPuzzle(imgUrl) {
-            const area = document.getElementById('game-area');
-            document.querySelectorAll('.piece').forEach(p => p.remove());
-            document.getElementById('puzzle-slots').innerHTML = Array(9).fill('<div class="slot"></div>').join('');
-
-            let order = [...Array(9).keys()].sort(() => Math.random() - 0.5);
-            order.forEach((pIdx, i) => {
-                const p = document.createElement('div');
-                p.className = 'piece';
-                p.dataset.correct = pIdx;
-                p.style.backgroundImage = `url('${imgUrl}')`;
-                p.style.backgroundPosition = `-${(pIdx%3)*80}px -${Math.floor(pIdx/3)*80}px`;
-                // Piesele apar sub sloturi
-                p.style.top = (280 + Math.floor(i/3) * 85) + 'px';
-                p.style.left = (10 + (i%3) * 85) + 'px';
-                
-                let sX, sY, iX, iY;
-                p.addEventListener('touchstart', (e) => {
-                    const t = e.touches[0]; sX = t.clientX; sY = t.clientY;
-                    iX = p.offsetLeft; iY = p.offsetTop; p.style.zIndex = 1000;
-                });
-
-                p.addEventListener('touchmove', (e) => {
-                    e.preventDefault();
-                    const t = e.touches[0];
-                    p.style.left = (iX + (t.clientX - sX)) + 'px';
-                    p.style.top = (iY + (t.clientY - sY)) + 'px';
-                });
-
-                p.addEventListener('touchend', () => {
-                    p.style.zIndex = 100;
-                    const r = p.getBoundingClientRect();
-                    document.querySelectorAll('.slot').forEach((s, idx) => {
-                        const sr = s.getBoundingClientRect();
-                        if(Math.abs(r.left - sr.left) < 30 && Math.abs(r.top - sr.top) < 30) {
-                            p.style.left = (s.offsetLeft) + 'px';
-                            p.style.top = (s.offsetTop) + 'px';
-                            p.dataset.slot = idx;
-                            checkWin();
-                        }
-                    });
-                });
-                area.appendChild(p);
-            });
-        }
-
-        function checkWin() {
-            const ps = document.querySelectorAll('.piece');
-            const win = [...ps].filter(p => p.dataset.slot == p.dataset.correct).length === 9;
-            if(win) {
-                alert("Nivel Completat!");
-                if(unlocked < 120) unlocked++;
-                stars += 10;
-                localStorage.setItem('pq_stars', stars);
-                localStorage.setItem('pq_unlocked', unlocked);
-                showScreen('screen-map');
-                initMap();
-            }
-        }
-
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
-
-        initMap();
-    </script>
-</body>
-</html>
+  // Mică pauză pentru stabilitatea citirilor
+  delay(100);
+}
