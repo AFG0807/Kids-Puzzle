@@ -3,10 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pingu Quest: Fixed & Real Penguin</title>
+    <title>Pingu Quest: Super Drag & Drop</title>
     <style>
         :root { --p-blue: #00A8FF; --p-yellow: #FFCE00; --p-pink: #FF4D91; --p-green: #4CD137; }
-        body { background: #E0F7FA; font-family: 'Comic Sans MS', cursive; margin: 0; overflow-x: hidden; touch-action: none; user-select: none; }
+        body { 
+            background: #E0F7FA; font-family: 'Comic Sans MS', cursive; margin: 0; 
+            overflow-x: hidden; touch-action: none; user-select: none; -webkit-user-select: none;
+        }
         .screen { display: none; min-height: 100vh; width: 100vw; flex-direction: column; align-items: center; }
         .active { display: flex; }
 
@@ -16,45 +19,46 @@
         .level-unlocked { border-color: var(--p-blue); color: var(--p-blue); }
         .level-current { border-color: var(--p-green); background: var(--p-green); color: white; scale: 1.1; box-shadow: 0 0 20px var(--p-green); }
         
-        /* Personaj Pinguin GRAFIC TRANSPARENT */
+        /* Pinguinul */
         #penguin-avatar {
             position: absolute; width: 100px; height: 100px; z-index: 10; pointer-events: none;
             transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-            /* Imagine transparentă cu un pinguin explorator desenat */
             background-image: url('https://cdn-icons-png.flaticon.com/512/2823/2823055.png'); 
             background-size: contain; background-repeat: no-repeat; background-position: center;
             filter: drop-shadow(0 10px 8px rgba(0,0,0,0.3));
-            animation: pingu-pulse 2s infinite ease-in-out;
         }
 
-        @keyframes pingu-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        .wobble-anim { animation: waddle 0.7s ease-in-out; }
-        @keyframes waddle { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-10deg); } 75% { transform: rotate(10deg); } }
-
-        /* Puzzle Game Style */
-        #game-area { display: flex; flex-direction: column; align-items: center; margin-top: 10px; position: relative; width: 100%; padding-bottom: 250px;}
-        #puzzle-slots { display: grid; grid-template-columns: repeat(3, 105px); grid-template-rows: repeat(3, 105px); gap: 6px; border: 10px solid white; border-radius: 20px; background: rgba(255,255,255,0.7); padding: 8px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .slot { width: 105px; height: 105px; background: rgba(255,255,255,0.4); border-radius: 12px; border: 2px dashed rgba(0,0,0,0.1); box-sizing: border-box; }
+        /* Puzzle Styling */
+        #game-area { display: flex; flex-direction: column; align-items: center; margin-top: 20px; width: 100%; position: relative; }
+        #puzzle-slots { 
+            display: grid; grid-template-columns: repeat(3, 105px); grid-template-rows: repeat(3, 105px); 
+            gap: 6px; border: 10px solid white; border-radius: 20px; background: rgba(255,255,255,0.7); 
+            padding: 8px; pointer-events: none; /* Sloturile doar stau acolo */
+        }
+        .slot { width: 105px; height: 105px; background: rgba(255,255,255,0.4); border-radius: 12px; border: 2px dashed rgba(0,0,0,0.1); }
         
-        #pieces-container { width: 90%; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; position: relative; min-height: 200px; }
-        .piece { width: 105px; height: 105px; background-size: 315px 315px; border-radius: 12px; cursor: grab; touch-action: none; box-shadow: 0 5px 10px rgba(0,0,0,0.2); position: absolute; z-index: 10; transition: transform 0.1s, box-shadow 0.1s; }
-        .piece:active { cursor: grabbing; scale: 1.1; z-index: 1000; box-shadow: 0 12px 24px rgba(0,0,0,0.3); }
+        /* Piesele de puzzle */
+        .piece { 
+            width: 105px; height: 105px; background-size: 315px 315px; border-radius: 12px; 
+            position: absolute; cursor: grab; touch-action: none; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 100;
+            -webkit-user-drag: none; /* Important pentru Chrome/Safari */
+        }
+        .piece:active { cursor: grabbing; scale: 1.1; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
 
-        /* UI */
-        .top-bar { width: 100%; height: 60px; background: white; display: flex; justify-content: space-around; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 3px 15px rgba(0,0,0,0.1); }
-        .btn { padding: 12px 25px; border: none; border-radius: 50px; font-weight: bold; font-size: 16px; cursor: pointer; color: white; box-shadow: 0 5px 0 rgba(0,0,0,0.2); }
+        .top-bar { width: 100%; height: 60px; background: white; display: flex; justify-content: space-around; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .btn { padding: 10px 20px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; color: white; }
     </style>
 </head>
 <body>
 
     <div class="top-bar">
-        <div style="font-size: 22px; font-weight:bold;">⭐ <span id="stars-val">0</span></div>
-        <button class="btn" style="background:var(--p-pink)" onclick="claimDaily()">🎁 CADOU</button>
-        <button class="btn" style="background:var(--p-blue)" onclick="showScreen('screen-map')">🗺️ HARTĂ</button>
+        <div style="font-size: 22px;">⭐ <span id="stars-val">0</span></div>
+        <button class="btn" style="background:var(--p-blue)" onclick="showScreen('screen-map')">HARTĂ</button>
     </div>
 
     <div id="screen-map" class="screen active">
-        <h1 style="color:var(--p-blue); margin: 20px; text-shadow: 2px 2px 0 white;">Pingu Aventura 🐧</h1>
+        <h2 style="color:var(--p-blue); margin: 20px;">Pingu Aventura 🐧</h2>
         <div id="map-container">
             <div id="penguin-avatar"></div>
             <div id="levels-path" style="width:100%;"></div>
@@ -62,48 +66,36 @@
     </div>
 
     <div id="screen-game" class="screen">
-        <div id="animal-msg" style="margin:15px; background:white; padding:12px 25px; border-radius:20px; border:3px solid var(--p-pink); font-weight:bold; color:#d81b60; font-size:20px;"></div>
+        <div id="animal-msg" style="margin:15px; background:white; padding:10px 20px; border-radius:15px; border:2px solid var(--p-pink); font-weight:bold; color:#d81b60;"></div>
         <div id="game-area">
             <div id="puzzle-slots"></div>
-            <div id="pieces-container"></div>
-        </div>
-        <div style="position:fixed; bottom: 20px; z-index:1001;">
-            <button class="btn" style="background:var(--p-blue); padding: 10px 40px;" onclick="showScreen('screen-map')">BACK</button>
-        </div>
+            </div>
+        <button class="btn" style="background:var(--p-blue); margin-top: 250px;" onclick="showScreen('screen-map')">BACK</button>
     </div>
 
     <script>
         let stars = parseInt(localStorage.getItem('dg_stars')) || 0;
         let unlocked = parseInt(localStorage.getItem('dg_unlocked')) || 1;
-        
-        // --- LISTĂ IMAGINI FIXE (GATA CU ERORILE!) ---
         const animalLevels = [
-            { name: "Leu", img: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=315&h=315&auto=format&fit=crop" },
-            { name: "Elefant", img: "https://images.unsplash.com/photo-1581888227599-779811939961?w=315&h=315&auto=format&fit=crop" },
-            { name: "Zebra", img: "https://images.unsplash.com/photo-1501706362039-c06b2d715385?w=315&h=315&auto=format&fit=crop" },
-            { name: "Panda", img: "https://images.unsplash.com/photo-1564349683136-77e08bef1ef1?w=315&h=315&auto=format&fit=crop" },
-            { name: "Pisicuță", img: "https://images.unsplash.com/photo-1514888286974-8c23e1b45091?w=315&h=315&auto=format&fit=crop" },
-            { name: "Iepuraș", img: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=315&h=315&auto=format&fit=crop" }
+            { name: "Leu", img: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=400&h=400&fit=crop" },
+            { name: "Elefant", img: "https://images.unsplash.com/photo-1581888227599-779811939961?w=400&h=400&fit=crop" },
+            { name: "Zebra", img: "https://images.unsplash.com/photo-1501706362039-c06b2d715385?w=400&h=400&fit=crop" },
+            { name: "Panda", img: "https://images.unsplash.com/photo-1564349683136-77e08bef1ef1?w=400&h=400&fit=crop" }
         ];
-        let piecesOrder = [];
-        let curImg = "";
 
-        // --- MAP LOGIC ---
         function initMap() {
             const container = document.getElementById('levels-path');
             container.innerHTML = '';
-            // Afișăm doar nivelele pe care le avem configurate în listă
             animalLevels.forEach((level, i) => {
-                const lvlNodeNum = i + 1;
                 const node = document.createElement('div');
-                node.className = `level-node ${lvlNodeNum < unlocked ? 'level-unlocked' : (lvlNodeNum === unlocked ? 'level-current' : '')}`;
+                node.className = `level-node ${i+1 < unlocked ? 'level-unlocked' : (i+1 === unlocked ? 'level-current' : '')}`;
                 node.style.marginLeft = (i % 2 === 0) ? '15%' : '65%';
-                node.innerText = lvlNodeNum <= unlocked ? lvlNodeNum : '🔒';
-                node.id = `node-${lvlNodeNum}`;
-                node.onclick = () => { if(lvlNodeNum <= unlocked) startLevel(lvlNodeNum); };
+                node.innerText = i+1 <= unlocked ? i+1 : '🔒';
+                node.id = `node-${i+1}`;
+                node.onclick = () => { if(i+1 <= unlocked) startLevel(i+1); };
                 container.appendChild(node);
             });
-            updateUI();
+            document.getElementById('stars-val').innerText = stars;
             setTimeout(movePenguin, 200);
         }
 
@@ -113,41 +105,26 @@
             if(currentNode && avatar) {
                 avatar.style.top = (currentNode.offsetTop - 80) + 'px';
                 avatar.style.left = (currentNode.offsetLeft - 15) + 'px';
-                avatar.classList.add('wobble-anim');
-                setTimeout(() => avatar.classList.remove('wobble-anim'), 700);
                 currentNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
 
-        // --- GAME LOGIC (FIXED IMAGES) ---
         function startLevel(id) {
-            // Verificăm dacă nivelul există în lista noastră
-            if(id > animalLevels.length) {
-                alert("Felicitări! Ai terminat toate nivelele disponibile!");
-                unlocked = 1; // Resetăm pentru demo
-                localStorage.setItem('dg_unlocked', unlocked);
-                initMap();
-                return;
-            }
-            
             const levelData = animalLevels[id-1];
             document.getElementById('animal-msg').innerText = `✨ Animalul este: ${levelData.name}! ✨`;
-            curImg = levelData.img; // Folosim URL-ul fix, gata cu AI erori
-            
             showScreen('screen-game');
-            setupPuzzle();
+            setupPuzzle(levelData.img);
         }
 
-        function setupPuzzle() {
+        function setupPuzzle(imgUrl) {
+            const gameArea = document.getElementById('game-area');
             const slotsContainer = document.getElementById('puzzle-slots');
-            const piecesContainer = document.getElementById('pieces-container');
+            
+            // Ștergem piese vechi
+            document.querySelectorAll('.piece').forEach(p => p.remove());
             slotsContainer.innerHTML = '';
-            piecesContainer.innerHTML = ''; 
 
-            piecesOrder = [0,1,2,3,4,5,6,7,8];
-            shuffleArray(piecesOrder);
-
-            // Cream gridul de slots
+            // Cream sloturile
             for(let i=0; i<9; i++) {
                 const slot = document.createElement('div');
                 slot.className = 'slot';
@@ -155,144 +132,117 @@
                 slotsContainer.appendChild(slot);
             }
 
-            // Cream piesele fizice și le punem în pieces-container
-            piecesOrder.forEach((pieceIndex, i) => {
+            // Cream piesele
+            let order = [0,1,2,3,4,5,6,7,8];
+            order.sort(() => Math.random() - 0.5);
+
+            order.forEach((pieceIndex, i) => {
                 const p = document.createElement('div');
                 p.className = 'piece';
-                p.dataset.correctIndex = pieceIndex;
-                p.style.backgroundImage = `url('${curImg}')`;
+                p.dataset.correct = pieceIndex;
+                p.style.backgroundImage = `url('${imgUrl}')`;
                 
                 const r = Math.floor(pieceIndex / 3);
                 const c = pieceIndex % 3;
                 p.style.backgroundPosition = `-${c * 105}px -${r * 105}px`;
 
-                // Poziționare inițială în containerul de jos (pe 'masă')
-                p.style.top = (Math.floor(i/3) * 115) + 'px';
-                p.style.left = ((i%3) * 115) + 'px';
-                p.dataset.initialX = p.style.left;
-                p.dataset.initialY = p.style.top;
+                // Le punem jos pe "masă"
+                p.style.top = (420 + Math.floor(i/3) * 110) + 'px';
+                p.style.left = (20 + (i%3) * 110) + 'px';
 
-                initDrag(p);
-                piecesContainer.appendChild(p);
+                makeDraggable(p);
+                gameArea.appendChild(p);
             });
         }
 
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-        }
+        function makeDraggable(el) {
+            let isDragging = false;
+            let startX, startY, initialX, initialY;
 
-        // --- DRAG SYSTEM FIX ---
-        function initDrag(el) {
-            let startX, startY, initialX, initialY, active = false;
-
-            el.addEventListener('touchstart', dragStart, {passive: false});
-            el.addEventListener('touchend', dragEnd);
-            el.addEventListener('touchmove', drag, {passive: false});
-
-            function dragStart(e) {
-                active = true;
-                el.style.zIndex = "1000";
-                el.style.transition = "none";
-                const touch = e.touches[0];
-                startX = touch.clientX; startY = touch.clientY;
-                initialX = el.offsetLeft; initialY = el.offsetTop;
-            }
-
-            function drag(e) {
-                if (!active) return;
-                e.preventDefault(); 
-                const touch = e.touches[0];
-                const curX = touch.clientX; const curY = touch.clientY;
-                el.style.left = (initialX + curX - startX) + 'px';
-                el.style.top = (initialY + curY - startY) + 'px';
-            }
-
-            function dragEnd(e) {
-                if (!active) return;
-                active = false;
-                el.style.zIndex = "10";
-                el.style.transition = "transform 0.1s";
-
-                const elBounds = el.getBoundingClientRect();
-                const elCenterX = elBounds.left + 52;
-                const elCenterY = elBounds.top + 52;
+            // Suport Touch & Mouse
+            const onStart = (e) => {
+                isDragging = true;
+                el.style.zIndex = "2000";
+                const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
                 
-                let droppedOnSlot = false;
+                startX = clientX;
+                startY = clientY;
+                initialX = el.offsetLeft;
+                initialY = el.offsetTop;
+            };
 
+            const onMove = (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+                const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+                el.style.left = (initialX + (clientX - startX)) + 'px';
+                el.style.top = (initialY + (clientY - startY)) + 'px';
+            };
+
+            const onEnd = () => {
+                if (!isDragging) return;
+                isDragging = false;
+                el.style.zIndex = "100";
+
+                // Verificăm unde am lăsat piesa
+                const elRect = el.getBoundingClientRect();
+                const centerX = elRect.left + 52;
+                const centerY = elRect.top + 52;
+
+                let snapped = false;
                 document.querySelectorAll('.slot').forEach(slot => {
-                    const sb = slot.getBoundingClientRect();
-                    if (elCenterX > sb.left && elCenterX < sb.right && elCenterY > sb.top && elCenterY < sb.bottom) {
-                        droppedOnSlot = true;
-                        
-                        const piecesContainer = document.getElementById('pieces-container');
-                        const pcBounds = piecesContainer.getBoundingClientRect();
-                        
-                        const finalX = (sb.left - pcBounds.left);
-                        const finalY = (sb.top - pcBounds.top);
-
-                        // Swap Logic: Dacă există deja o piesă, o trimitem înapoi
-                        const existingPieceNum = piecesOrder[slot.dataset.index];
-                        // Găsim piesa fizică care are dataset.correctIndex == piecesOrder[slot.dataset.index]
-                        // Dar e complicat. Mai bine lăsăm swap-ul pentru data viitoare și o facem să nu se lipească
-                        // dacă e ocupat. Sau o facem să zboare înapoi.
-                        
-                        el.style.left = finalX + 'px';
-                        el.style.top = finalY + 'px';
-                        el.dataset.currentSlot = slot.dataset.index;
-                        
-                        setTimeout(checkWinCondition, 300);
+                    const sRect = slot.getBoundingClientRect();
+                    if (centerX > sRect.left && centerX < sRect.right && centerY > sRect.top && centerY < sRect.bottom) {
+                        // Lipim piesa de slot
+                        const gameAreaRect = document.getElementById('game-area').getBoundingClientRect();
+                        el.style.left = (sRect.left - gameAreaRect.left) + 'px';
+                        el.style.top = (sRect.top - gameAreaRect.top) + 'px';
+                        el.dataset.slot = slot.dataset.index;
+                        snapped = true;
+                        checkWin();
                     }
                 });
 
-                if (!droppedOnSlot) {
-                    el.style.left = el.dataset.initialX;
-                    el.style.top = el.dataset.initialY;
-                    el.dataset.currentSlot = -1;
-                }
-            }
+                if (!snapped) el.dataset.slot = -1;
+            };
+
+            el.addEventListener('mousedown', onStart);
+            el.addEventListener('touchstart', onStart, {passive: false});
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('touchmove', onMove, {passive: false});
+            window.addEventListener('mouseup', onEnd);
+            window.addEventListener('touchend', onEnd);
         }
 
-        function checkWinCondition() {
-            const piecesPhysical = document.querySelectorAll('.piece');
-            if (piecesPhysical.length === 0) return;
-
-            let allCorrect = true;
-            let onGridCount = 0;
-            piecesPhysical.forEach(p => {
-                if(p.dataset.currentSlot >= 0) {
-                    onGridCount++;
-                    if (p.dataset.currentSlot != p.dataset.correctIndex) {
-                        allCorrect = false;
-                    }
-                } else {
-                    allCorrect = false;
-                }
+        function checkWin() {
+            const pieces = document.querySelectorAll('.piece');
+            let win = true;
+            let count = 0;
+            pieces.forEach(p => {
+                if(p.dataset.slot == p.dataset.correct) count++;
+                else win = false;
             });
-
-            if (onGridCount === 9 && allCorrect) {
-                stars += 15;
-                unlocked++;
-                localStorage.setItem('dg_stars', stars);
-                localStorage.setItem('dg_unlocked', unlocked);
+            if(win && count === 9) {
                 setTimeout(() => {
-                    alert("🎉 BRAVO! Ai salvat animalul!");
+                    alert("🎉 Bravo! Pinguinul e fericit!");
+                    unlocked++;
+                    stars += 20;
+                    localStorage.setItem('dg_unlocked', unlocked);
+                    localStorage.setItem('dg_stars', stars);
                     showScreen('screen-map');
                     initMap();
-                }, 400);
+                }, 500);
             }
         }
 
-        // --- UI HELPERS ---
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             if(id === 'screen-map') setTimeout(movePenguin, 400);
         }
-        function updateUI() { document.getElementById('stars-val').innerText = stars; }
-        function claimDaily() { stars += 50; updateUI(); alert("🎁 50 Stele!"); }
 
         initMap();
     </script>
