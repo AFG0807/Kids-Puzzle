@@ -3,56 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pingu & Friends: Marea Aventură</title>
+    <title>Pingu Quest: Natural Wonders</title>
     <style>
         :root { --p-blue: #00A8FF; --p-pink: #FF4D91; --p-green: #4CD137; --p-purple: #9c27b0; }
         html, body { 
             overscroll-behavior: none; overflow: hidden; position: fixed; 
-            width: 100%; height: 100%; margin: 0; font-family: 'Arial Rounded MT Bold', sans-serif;
-            background: #E0F7FA; touch-action: none; 
+            width: 100%; height: 100%; margin: 0; font-family: 'Comic Sans MS', cursive;
+            background: #E0F7FA; touch-action: none; -webkit-user-select: none;
         }
         .screen { display: none; height: 100vh; width: 100vw; flex-direction: column; align-items: center; }
         .active { display: flex; }
 
-        /* Harta Stil Zig-Zag */
-        #map-container { width: 100%; flex-grow: 1; position: relative; background: #b2ebf2; overflow-y: auto; touch-action: pan-y; padding-bottom: 100px; }
-        .level-node { 
-            width: 65px; height: 65px; background: white; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 20px; font-weight: bold; border: 5px solid #ccc; 
-            position: relative; margin: 20px 0; color: #999; z-index: 5; 
-        }
-        /* Poziționare Stânga-Dreapta-Centru pentru aspect de potecă */
-        .node-left { margin-left: 15%; }
-        .node-center { margin-left: auto; margin-right: auto; }
-        .node-right { margin-left: 65%; }
-
-        .level-unlocked { border-color: var(--p-blue); color: var(--p-blue); box-shadow: 0 4px 0 #0086cc; }
-        .level-current { border-color: var(--p-green); background: var(--p-green); color: white; transform: scale(1.1); box-shadow: 0 0 15px var(--p-green); }
+        /* --- NOUA HARTĂ STILIZATĂ --- */
+        #map-container { 
+    width: 100%; 
+    flex-grow: 1; 
+    position: relative; 
+    /* ACESTA ESTE LINK-UL DIRECT: */
+    background-image: url('https://i.ibb.co/680LhS5/map-design.jpg'); 
+    background-size: 100% 100%; 
+    background-position: center;
+    background-repeat: no-repeat;
+    overflow: hidden;
+}
         
-        #dynamic-avatar {
-            position: absolute; width: 60px; height: 60px; z-index: 10;
-            background-size: contain; background-repeat: no-repeat; background-position: center;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            pointer-events: none;
+        /* Nodul de nivel (cercul cu număr) */
+        .level-node { 
+            width: 45px; height: 45px; background: white; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 16px; font-weight: bold; border: 4px solid #ccc; 
+            position: absolute; color: #999; z-index: 5; transition: 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            cursor: pointer;
         }
 
-        /* Joc Puzzle */
-        #game-area { position: relative; width: 320px; height: 100%; padding-top: 10px; }
-        #puzzle-slots { display: grid; grid-template-columns: repeat(3, 100px); gap: 5px; background: rgba(255,255,255,0.4); padding: 8px; border-radius: 15px; border: 5px solid white; }
-        .slot { width: 100px; height: 100px; background: rgba(255,255,255,0.3); border-radius: 8px; }
-        .piece { width: 100px; height: 100px; background-size: 300px 300px; border-radius: 10px; position: absolute; z-index: 100; box-shadow: 0 4px 8px rgba(0,0,0,0.3); touch-action: none; }
+        .level-unlocked { border-color: var(--p-blue); color: var(--p-blue); }
+        .level-current { 
+            border-color: var(--p-green); background: var(--p-green); color: white; 
+            transform: scale(1.1); box-shadow: 0 0 15px var(--p-green); 
+        }
 
+        /* Avatar Dinamic pe hartă (Cățel, Papagal etc.) */
+        #dynamic-avatar {
+            position: absolute; width: 80px; height: 80px; z-index: 10;
+            background-size: contain; background-repeat: no-repeat; background-position: center;
+            transition: all 0.5s ease-in-out; pointer-events: none;
+            filter: drop-shadow(0 5px 8px rgba(0,0,0,0.4));
+        }
+
+        /* UI Pop-up și Joc (rămân neschimbate) */
         #win-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 30px; border: 6px solid var(--p-green); text-align: center; z-index: 9999; width: 260px; box-shadow: 0 0 100px rgba(0,0,0,0.4); }
+        .piece { width: 100px; height: 100px; background-size: 300px 300px; border-radius: 10px; position: absolute; z-index: 100; box-shadow: 0 4px 8px rgba(0,0,0,0.3); touch-action: none; }
+        .piece:active { scale: 1.1; z-index: 1000; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
         .top-bar { width: 100%; height: 50px; background: white; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 1000; }
-        .btn { padding: 10px 20px; border: none; border-radius: 20px; font-weight: bold; color: white; background: var(--p-blue); }
+        .btn { padding: 10px 20px; border: none; border-radius: 20px; font-weight: bold; color: white; background: var(--p-blue); cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="win-popup">
         <h2 style="color: var(--p-green); margin: 0;">🎉 BRAVO! 🎉</h2>
-        <p>Nivel terminat!</p>
+        <p>Ai completat puzzle-ul!</p>
         <button class="btn" style="background: var(--p-green);" onclick="closeWinPopup()">HARTĂ</button>
     </div>
 
@@ -80,29 +91,34 @@
     </div>
 
     <script>
-        // Avatarele care se schimbă pe hartă
-        const avatars = {
-            "Sălbatice": "https://cdn-icons-png.flaticon.com/512/2823/2823055.png", // Pinguin
-            "Domestice": "https://cdn-icons-png.flaticon.com/512/616/616408.png",  // Cățel
-            "Pasări": "https://cdn-icons-png.flaticon.com/512/2503/2503830.png",     // Papagal
-            "Subacvatice": "https://cdn-icons-png.flaticon.com/512/2123/2123714.png" // Pește
+        // COORDONATELE FIXE ALE NODURILOR (X, Y in %)
+        const nodePositions = {
+            1: { x: 50, y: 80 },  // START
+            15: { x: 25, y: 70 }, // Junglă
+            30: { x: 35, y: 60 },
+            45: { x: 50, y: 50 }, // Fermă
+            60: { x: 65, y: 45 },
+            75: { x: 70, y: 35 }, // Cer
+            90: { x: 75, y: 25 },
+            105: { x: 85, y: 15 }, // Ocean
+            120: { x: 50, y: 10 }  // WINNER
         };
 
-        const categories = [
-            { name: "Sălbatice", keyword: "wildlife" },
-            { name: "Domestice", keyword: "pet" },
-            { name: "Pasări", keyword: "bird" },
-            { name: "Subacvatice", keyword: "fish" }
-        ];
+        const avatars = {
+            "Sălbatice": "https://cdn-icons-png.flaticon.com/512/2823/2823055.png",
+            "Domestice": "https://cdn-icons-png.flaticon.com/512/616/616408.png",
+            "Pasări": "https://cdn-icons-png.flaticon.com/512/2503/2503830.png",
+            "Subacvatice": "https://cdn-icons-png.flaticon.com/512/2123/2123714.png"
+        };
 
+        const categories = ["Sălbatice", "Domestice", "Pasări", "Subacvatice"];
         const levels = [];
-        // Generăm cele 120 de nivele (30 per categorie)
-        categories.forEach((cat) => {
+        categories.forEach(catName => {
             for(let i=1; i<=30; i++) {
                 levels.push({ 
-                    name: `${cat.name} #${i}`, 
-                    cat: cat.name, 
-                    img: `https://source.unsplash.com/featured/300x300?${cat.keyword},${i}` 
+                    name: `Nivel ${i}`, 
+                    cat: catName, 
+                    img: `https://image.pollinations.ai/prompt/cute_cartoon_${catName.toLowerCase()}_animal_square?width=300&height=300&seed=${i}`
                 });
             }
         });
@@ -113,21 +129,26 @@
         function initMap() {
             const path = document.getElementById('levels-path');
             path.innerHTML = '';
-            levels.forEach((l, i) => {
-                const n = document.createElement('div');
-                const num = i + 1;
-                
-                // Logica de zig-zag pentru hartă
-                let posClass = "node-center";
-                if(i % 4 === 1) posClass = "node-right";
-                if(i % 4 === 3) posClass = "node-left";
+            
+            // Generăm noduri doar pentru punctele cheie (1, 15, 30, 45...) definite în nodePositions
+            Object.keys(nodePositions).forEach(numStr => {
+                const num = parseInt(numStr);
+                if (num > levels.length) return; // Siguranță
 
-                n.className = `level-node ${posClass} ${num < unlocked ? 'level-unlocked' : (num === unlocked ? 'level-current' : '')}`;
+                const pos = nodePositions[num];
+                const n = document.createElement('div');
+                n.className = `level-node ${num < unlocked ? 'level-unlocked' : (num === unlocked ? 'level-current' : '')}`;
                 n.innerText = num <= unlocked ? num : '🔒';
                 n.id = `node-${num}`;
+                
+                // Poziționăm nodul exact pe drumul din imagine
+                n.style.left = `calc(${pos.x}% - 22.5px)`; // Ajustăm pentru centrul cercului
+                n.style.top = `calc(${pos.y}% - 22.5px)`;
+                
                 n.onclick = () => { if(num <= unlocked) startLevel(num); };
                 path.appendChild(n);
             });
+            
             document.getElementById('stars-val').innerText = stars;
             setTimeout(updateAvatar, 200);
         }
@@ -135,12 +156,17 @@
         function updateAvatar() {
             const node = document.getElementById(`node-${unlocked}`);
             const av = document.getElementById('dynamic-avatar');
+            
             if(node && av) {
-                const curLevel = levels[unlocked - 1];
-                av.style.backgroundImage = `url('${avatars[curLevel.cat]}')`;
-                av.style.top = (node.offsetTop) + 'px';
-                av.style.left = (node.offsetLeft + 2) + 'px';
-                node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const cur = levels[unlocked - 1];
+                av.style.backgroundImage = `url('${avatars[cur.cat]}')`;
+                
+                // Poziționăm avatarul fix peste nodul curent
+                const rect = node.getBoundingClientRect();
+                const containerRect = document.getElementById('map-container').getBoundingClientRect();
+                
+                av.style.left = (rect.left - containerRect.left - 17.5) + 'px'; // Ajustat pentru centru
+                av.style.top = (rect.top - containerRect.top - 60) + 'px'; // Ridicat puțin deasupra
             }
         }
 
@@ -152,28 +178,21 @@
             setupPuzzle(l.img);
         }
 
+        // --- SISTEMUL DE JOC ȘI PUZZLE (rămân neschimbate) ---
         function setupPuzzle(img) {
             const area = document.getElementById('game-area');
             document.querySelectorAll('.piece').forEach(p => p.remove());
-            const slots = document.getElementById('puzzle-slots');
-            slots.innerHTML = '';
+            document.getElementById('puzzle-slots').innerHTML = Array(9).fill('<div class="slot"></div>').join('');
 
-            for(let i=0; i<9; i++) {
-                const s = document.createElement('div');
-                s.className = 'slot';
-                s.dataset.idx = i;
-                slots.appendChild(s);
-            }
-
-            let order = [0,1,2,3,4,5,6,7,8].sort(() => Math.random() - 0.5);
+            let order = [...Array(9).keys()].sort(() => Math.random() - 0.5);
             order.forEach((pIdx, i) => {
                 const p = document.createElement('div');
                 p.className = 'piece';
                 p.dataset.correct = pIdx;
                 p.style.backgroundImage = `url('${img}')`;
                 p.style.backgroundPosition = `-${(pIdx%3)*100}px -${Math.floor(pIdx/3)*100}px`;
-                p.style.top = (340 + Math.floor(i/3) * 105) + 'px';
-                p.style.left = (5 + (i%3) * 105) + 'px';
+                p.style.top = (320 + Math.floor(i/3) * 110) + 'px';
+                p.style.left = (5 + (i%3) * 110) + 'px';
                 
                 let sX, sY, iX, iY;
                 p.addEventListener('touchstart', (e) => {
@@ -185,7 +204,7 @@
                     e.preventDefault();
                     const t = e.touches[0];
                     p.style.left = (iX + (t.clientX - sX)) + 'px';
-                    p.style.top = (iY + (t.clientY - sY)) + 'px';
+                    p.style.top = (initY + (t.clientY - startY)) + 'px';
                 }, {passive: false});
 
                 p.addEventListener('touchend', () => {
@@ -193,13 +212,13 @@
                     const r = p.getBoundingClientRect();
                     const cx = r.left + 50, cy = r.top + 50;
                     let hit = false;
-                    document.querySelectorAll('.slot').forEach(s => {
+                    document.querySelectorAll('.slot').forEach((s, sIdx) => {
                         const sr = s.getBoundingClientRect();
                         if(cx > sr.left && cx < sr.right && cy > sr.top && cy < sr.bottom) {
                             const ar = area.getBoundingClientRect();
                             p.style.left = (sr.left - ar.left) + 'px';
                             p.style.top = (sr.top - ar.top) + 'px';
-                            p.dataset.slot = s.dataset.idx;
+                            p.dataset.slot = sIdx;
                             hit = true; checkWin();
                         }
                     });
@@ -210,10 +229,9 @@
         }
 
         function checkWin() {
-            let win = true;
             const ps = document.querySelectorAll('.piece');
-            ps.forEach(p => { if(p.dataset.slot != p.dataset.correct) win = false; });
-            if(win && ps.length === 9) {
+            const correct = [...ps].filter(p => p.dataset.slot == p.dataset.correct).length;
+            if(correct === 9) {
                 document.getElementById('win-popup').style.display = 'block';
                 if(unlocked < levels.length) unlocked++;
                 stars += 10;
