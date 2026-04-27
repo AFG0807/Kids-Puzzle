@@ -3,41 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pingu Quest v3</title>
+    <title>Pingu Quest Fixed</title>
     <style>
         :root { --p-blue: #00A8FF; --p-pink: #FF4D91; --p-green: #4CD137; }
-        body { background: #E0F7FA; font-family: 'Comic Sans MS', cursive; margin: 0; overflow-x: hidden; touch-action: none; user-select: none; }
-        .screen { display: none; min-height: 100vh; flex-direction: column; align-items: center; }
+        body { 
+            background: #E0F7FA; font-family: 'Comic Sans MS', cursive; margin: 0; 
+            overflow: hidden; position: fixed; width: 100%; height: 100%;
+            touch-action: none; user-select: none; -webkit-user-select: none;
+        }
+        .screen { display: none; height: 100vh; width: 100vw; flex-direction: column; align-items: center; overflow-y: auto; }
         .active { display: flex; }
 
         /* Harta */
-        #map-container { width: 100%; position: relative; padding: 40px 0; background: #b2ebf2; min-height: 400px; }
+        #map-container { width: 100%; position: relative; padding: 40px 0; background: #b2ebf2; min-height: 500px; }
         .level-node { width: 65px; height: 65px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; border: 5px solid #ccc; position: relative; margin-bottom: 40px; cursor: pointer; color: #999; z-index: 5; }
         .level-unlocked { border-color: var(--p-blue); color: var(--p-blue); }
         .level-current { border-color: var(--p-green); background: var(--p-green); color: white; scale: 1.1; box-shadow: 0 0 15px var(--p-green); }
         
         #penguin-avatar {
             position: absolute; width: 80px; height: 80px; z-index: 10; pointer-events: none;
-            transition: all 0.6s ease;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             background: url('https://cdn-icons-png.flaticon.com/512/2823/2823055.png') no-repeat center;
             background-size: contain; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.2));
         }
 
         /* Puzzle */
-        #game-area { display: flex; flex-direction: column; align-items: center; padding-top: 20px; width: 100%; }
+        #game-area { position: relative; width: 320px; height: 650px; margin-top: 10px; }
         #puzzle-slots { 
             display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); 
             gap: 5px; border: 8px solid white; border-radius: 15px; background: rgba(255,255,255,0.5); padding: 5px;
+            position: absolute; top: 0; left: 0;
         }
-        .slot { width: 100px; height: 100px; background: rgba(255,255,255,0.3); border: 2px dashed rgba(0,0,0,0.05); border-radius: 8px; }
+        .slot { width: 100px; height: 100px; background: rgba(255,255,255,0.3); border-radius: 8px; }
         
         .piece { 
             width: 100px; height: 100px; background-size: 300px 300px; border-radius: 8px; 
-            position: absolute; cursor: grab; touch-action: none; z-index: 100;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: absolute; cursor: pointer; touch-action: none; z-index: 100;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
         }
 
-        .top-bar { width: 100%; height: 55px; background: white; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .top-bar { width: 100%; height: 55px; background: white; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 1000; }
         .btn { padding: 8px 20px; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; color: white; background: var(--p-blue); }
     </style>
 </head>
@@ -56,21 +62,20 @@
     </div>
 
     <div id="screen-game" class="screen">
-        <h3 id="animal-msg" style="color: var(--p-pink); margin: 15px;"></h3>
+        <h3 id="animal-msg" style="color: var(--p-pink); margin: 10px; z-index: 1001;"></h3>
         <div id="game-area">
             <div id="puzzle-slots"></div>
-        </div>
-        <button class="btn" style="margin-top: 340px;" onclick="showScreen('screen-map')">BACK</button>
+            </div>
     </div>
 
     <script>
-        let stars = parseInt(localStorage.getItem('dg_stars')) || 0;
-        let unlocked = parseInt(localStorage.getItem('dg_unlocked')) || 1;
+        let stars = parseInt(localStorage.getItem('pingu_stars')) || 0;
+        let unlocked = parseInt(localStorage.getItem('pingu_unlocked')) || 1;
         
         const animalLevels = [
             { name: "Leu", img: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=300&h=300&fit=crop" },
-            { name: "Elefant", img: "https://images.unsplash.com/photo-1581888227599-779811939961?w=300&h=300&fit=crop" },
-            { name: "Zebra", img: "https://images.unsplash.com/photo-1501706362039-c06b2d715385?w=300&h=300&fit=crop" },
+            { name: "Elefant", img: "https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=300&h=300&fit=crop" },
+            { name: "Zebra", img: "https://images.unsplash.com/photo-1526095179574-86e545346ce6?w=300&h=300&fit=crop" },
             { name: "Panda", img: "https://images.unsplash.com/photo-1564349683136-77e08bef1ef1?w=300&h=300&fit=crop" },
             { name: "Tigru", img: "https://images.unsplash.com/photo-1508013861974-9f63475c58b5?w=300&h=300&fit=crop" },
             { name: "Iepure", img: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=300&h=300&fit=crop" }
@@ -83,14 +88,14 @@
                 const node = document.createElement('div');
                 node.className = `level-node ${i+1 < unlocked ? 'level-unlocked' : (i+1 === unlocked ? 'level-current' : '')}`;
                 node.style.alignSelf = (i % 2 === 0) ? 'flex-start' : 'flex-end';
-                node.style.margin = "0 40px 30px 40px";
+                node.style.margin = "0 50px 40px 50px";
                 node.innerText = i+1 <= unlocked ? i+1 : '🔒';
                 node.id = `node-${i+1}`;
                 node.onclick = () => { if(i+1 <= unlocked) startLevel(i+1); };
                 path.appendChild(node);
             });
             document.getElementById('stars-val').innerText = stars;
-            setTimeout(movePenguin, 200);
+            setTimeout(movePenguin, 300);
         }
 
         function movePenguin() {
@@ -99,20 +104,22 @@
             if(node && pingu) {
                 pingu.style.top = (node.offsetTop - 60) + 'px';
                 pingu.style.left = (node.offsetLeft - 10) + 'px';
-                node.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
 
         function startLevel(id) {
             const data = animalLevels[id-1];
+            // Cache buster: adăugăm un parametru random la imagine să nu rămână imaginea veche
+            const freshImg = data.img + "&v=" + Math.random();
             document.getElementById('animal-msg').innerText = `Găsește: ${data.name}!`;
             showScreen('screen-game');
-            setupPuzzle(data.img);
+            setupPuzzle(freshImg);
         }
 
-        function setupPuzzle(img) {
-            const slots = document.getElementById('puzzle-slots');
+        function setupPuzzle(imgUrl) {
+            const gameArea = document.getElementById('game-area');
             document.querySelectorAll('.piece').forEach(p => p.remove());
+            const slots = document.getElementById('puzzle-slots');
             slots.innerHTML = '';
 
             for(let i=0; i<9; i++) {
@@ -127,33 +134,51 @@
                 const p = document.createElement('div');
                 p.className = 'piece';
                 p.dataset.correct = pIdx;
-                p.style.backgroundImage = `url('${img}')`;
+                p.style.backgroundImage = `url('${imgUrl}')`;
                 p.style.backgroundPosition = `-${(pIdx%3)*100}px -${Math.floor(pIdx/3)*100}px`;
                 
-                // Poziționare sub puzzle
-                p.style.top = (380 + Math.floor(i/3) * 105) + 'px';
-                p.style.left = (20 + (i%3) * 105) + 'px';
+                // Poziție de start (sub tabel)
+                p.style.top = (330 + Math.floor(i/3) * 105) + 'px';
+                p.style.left = (5 + (i%3) * 105) + 'px';
 
-                handleDrag(p);
-                document.getElementById('game-area').appendChild(p);
+                attachControls(p);
+                gameArea.appendChild(p);
             });
         }
 
-        function handleDrag(el) {
-            let active = false, startX, startY, initX, initY;
+        function attachControls(el) {
+            let active = false;
+            let offset = { x: 0, y: 0 };
+
+            const start = (e) => {
+                active = true;
+                el.style.zIndex = 2000;
+                el.style.transform = "scale(1.1)";
+                const touch = e.type.includes('touch') ? e.touches[0] : e;
+                const rect = el.getBoundingClientRect();
+                offset.x = touch.clientX - rect.left;
+                offset.y = touch.clientY - rect.top;
+            };
 
             const move = (e) => {
-                if(!active) return;
+                if (!active) return;
                 e.preventDefault();
-                let x = (e.type.includes('touch') ? e.touches[0].clientX : e.clientX) - startX;
-                let y = (e.type.includes('touch') ? e.touches[0].clientY : e.clientY) - startY;
-                el.style.left = (initX + x) + 'px';
-                el.style.top = (initY + y) + 'px';
+                const touch = e.type.includes('touch') ? e.touches[0] : e;
+                const area = document.getElementById('game-area').getBoundingClientRect();
+                
+                let newX = touch.clientX - area.left - offset.x;
+                let newY = touch.clientY - area.top - offset.y;
+
+                el.style.left = newX + 'px';
+                el.style.top = newY + 'px';
             };
 
             const end = () => {
-                if(!active) return;
+                if (!active) return;
                 active = false;
+                el.style.zIndex = 100;
+                el.style.transform = "scale(1)";
+
                 const rect = el.getBoundingClientRect();
                 const cx = rect.left + 50, cy = rect.top + 50;
                 let snapped = false;
@@ -172,12 +197,12 @@
                 if(!snapped) el.dataset.slot = -1;
             };
 
-            el.addEventListener('touchstart', e => {
-                active = true; startX = e.touches[0].clientX; startY = e.touches[0].clientY;
-                initX = el.offsetLeft; initY = el.offsetTop; el.style.zIndex = 1000;
-            }, {passive: false});
+            el.addEventListener('touchstart', start, {passive: false});
+            el.addEventListener('mousedown', start);
             window.addEventListener('touchmove', move, {passive: false});
+            window.addEventListener('mousemove', move);
             window.addEventListener('touchend', end);
+            window.addEventListener('mouseup', end);
         }
 
         function checkWin() {
@@ -186,21 +211,25 @@
             pieces.forEach(p => { if(p.dataset.slot == p.dataset.correct) correct++; });
             if(correct === 9) {
                 setTimeout(() => {
-                    alert("FELICITĂRI! 🎉 Ai rezolvat puzzle-ul!");
-                    if(unlocked < animalLevels.length) unlocked++;
-                    stars += 20;
-                    localStorage.setItem('dg_stars', stars);
-                    localStorage.setItem('dg_unlocked', unlocked);
+                    alert("🎉 EXCELENT! Ai rezolvat puzzle-ul!");
+                    if(unlocked < animalLevels.length) {
+                        unlocked++;
+                        stars += 25;
+                        localStorage.setItem('pingu_unlocked', unlocked);
+                        localStorage.setItem('pingu_stars', stars);
+                    }
                     showScreen('screen-map');
                     initMap();
-                }, 300);
+                }, 400);
             }
         }
 
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            if(id === 'screen-map') setTimeout(movePenguin, 300);
+            if(id === 'screen-map') {
+                setTimeout(initMap, 50);
+            }
         }
 
         initMap();
