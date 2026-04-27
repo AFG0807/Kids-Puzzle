@@ -3,120 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Penguin Quest: Learning Edition</title>
+    <title>Penguin Adventure Map</title>
     <style>
         :root { --p-blue: #00A8FF; --p-yellow: #FFCE00; --p-pink: #FF4D91; --p-green: #4CD137; }
-        body { background: #E0F7FA; font-family: 'Comic Sans MS', cursive; margin: 0; overflow: hidden; touch-action: none; }
-        .screen { display: none; height: 100vh; width: 100vw; flex-direction: column; align-items: center; }
+        body { background: #E0F7FA; font-family: 'Comic Sans MS', cursive; margin: 0; overflow-x: hidden; }
+        .screen { display: none; min-height: 100vh; width: 100vw; flex-direction: column; align-items: center; }
         .active { display: flex; }
-        
-        /* Mesaj Catchy */
-        #animal-message { 
-            background: white; padding: 10px 20px; border-radius: 20px; margin: 10px;
-            border: 3px solid var(--p-pink); color: #d81b60; font-size: 18px; font-weight: bold;
-            box-shadow: 0 4px 0 #fce4ec; animation: bounce 2s infinite;
-        }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 
-        .top-bar { width: 100%; height: 60px; background: white; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 10; }
-        #puzzle-board { display: grid; grid-template-columns: repeat(3, 105px); grid-template-rows: repeat(3, 105px); gap: 8px; border: 10px solid white; border-radius: 20px; background: #cfd8dc; }
-        .tile { width: 105px; height: 105px; background-size: 315px 315px; border-radius: 12px; }
-        .particle { position: absolute; pointer-events: none; width: 10px; height: 10px; background: var(--p-yellow); border-radius: 50%; z-index: 1000; }
-        .btn { padding: 12px 25px; border: none; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; color: white; box-shadow: 0 5px 0 rgba(0,0,0,0.2); margin: 5px; }
+        /* Harta Stilizata */
+        #map-container { 
+            width: 100%; position: relative; padding: 50px 0;
+            background-image: radial-gradient(#b2ebf2 2px, transparent 2px);
+            background-size: 30px 30px;
+        }
+        .path-line {
+            position: absolute; width: 10px; background: rgba(255,255,255,0.5);
+            z-index: 1; border-radius: 5px;
+        }
+        .level-node {
+            width: 70px; height: 70px; background: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; font-weight: bold; border: 5px solid #ccc;
+            position: relative; z-index: 5; margin-bottom: 40px;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.1); cursor: pointer;
+        }
+        .level-unlocked { border-color: var(--p-blue); color: var(--p-blue); background: #fff; }
+        .level-current { border-color: var(--p-green); background: var(--p-green); color: white; scale: 1.2; }
+
+        /* Pinguinul care se plimba */
+        #penguin-avatar {
+            position: absolute; width: 80px; height: 80px;
+            z-index: 10; pointer-events: none;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.2));
+        }
+
+        /* Puzzle Settings */
+        #puzzle-board { display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); gap: 5px; border: 10px solid white; border-radius: 20px; }
+        .tile { width: 100px; height: 100px; background-size: 300px 300px; border-radius: 10px; }
+        
+        .top-bar { width: 100%; height: 60px; background: white; display: flex; justify-content: space-around; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .btn { padding: 10px 20px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; color: white; }
     </style>
 </head>
 <body>
 
     <div class="top-bar">
-        <div style="font-size: 20px; font-weight: bold;">⭐ <span id="stars-val">0</span></div>
-        <button id="daily-btn" style="background:var(--p-pink); border:none; padding:8px 15px; border-radius:20px; color:white; font-weight:bold;" onclick="claimDaily()">🎁 CADOU</button>
-        <button class="btn" style="background:var(--p-blue); padding:8px 15px;" onclick="showScreen('screen-map')">🗺️ HARTĂ</button>
-    </div>
-
-    <div id="screen-game" class="screen">
-        <div id="animal-message">🔍 Hm, ce animal se ascunde aici?</div>
-        <div id="puzzle-board"></div>
-        <div style="margin-top:20px;">
-            <button class="btn" style="background:var(--p-green)" onclick="showAdHint()">HINT (Ad)</button>
-            <button class="btn" style="background:var(--p-blue)" onclick="showScreen('screen-map')">BACK</button>
-        </div>
+        <div style="font-size: 20px;">⭐ <span id="stars-val">0</span></div>
+        <button class="btn" style="background:var(--p-pink)" onclick="claimDaily()">🎁 ZILNIC</button>
+        <button class="btn" style="background:var(--p-blue)" onclick="showScreen('screen-map')">HARTĂ</button>
     </div>
 
     <div id="screen-map" class="screen active">
-        <h2 style="color:var(--p-blue)">Aventura lui Pingu</h2>
-        <div id="map-content" style="width:100%; overflow-y:auto; text-align:center;"></div>
+        <h2 style="color:var(--p-blue); margin: 20px;">Drumul Pinguinului 🐧</h2>
+        <div id="map-container">
+            <div id="penguin-avatar">🎒🐧</div>
+            <div id="levels-path"></div>
+        </div>
+    </div>
+
+    <div id="screen-game" class="screen">
+        <div id="animal-msg" style="margin:20px; font-weight:bold; color:var(--p-pink)"></div>
+        <div id="puzzle-board"></div>
+        <div style="margin-top:20px;">
+            <button class="btn" style="background:var(--p-green)" onclick="solvePuzzle()">HINT (Ad)</button>
+            <button class="btn" style="background:var(--p-blue)" onclick="showScreen('screen-map')">MENIU</button>
+        </div>
     </div>
 
     <script>
         let stars = parseInt(localStorage.getItem('p_stars')) || 0;
         let unlocked = parseInt(localStorage.getItem('p_unlocked')) || 1;
-        let lastDaily = localStorage.getItem('p_daily') || 0;
-
-        // Lista de animale pentru AI și mesaje
-        const animalList = [
-            "Cățeluș", "Pisicuță", "Elefant", "Leu", "Panda", "Iepuraș", "Pinguin", "Girafe", "Maimuță", "Tigru",
-            "Văcuță", "Oaie", "Păun", "Zebra", "Dinozaur", "Vulpe", "Ursuleț", "Hamster", "Papagal", "Delfin"
-        ];
-
-        function updateUI() {
-            document.getElementById('stars-val').innerText = stars;
-            localStorage.setItem('p_stars', stars);
-            localStorage.setItem('p_unlocked', unlocked);
-        }
+        const animalList = ["Cățeluș", "Pisicuță", "Elefant", "Leu", "Panda", "Iepuraș", "Pinguin", "Girafe", "Maimuță", "Tigru", "Păun", "Zebra", "Dinozaur", "Delfin", "Văcuță"];
 
         function initMap() {
-            const cont = document.getElementById('map-content');
-            cont.innerHTML = '';
-            animalList.forEach((name, index) => {
-                const lvl = index + 1;
-                const btn = document.createElement('div');
-                btn.style = `width:80%; background:white; margin:10px auto; padding:15px; border-radius:20px; border:4px solid ${lvl <= unlocked ? '#00A8FF' : '#ccc'}`;
-                btn.innerHTML = `<b>Nivel ${lvl}</b> ${lvl <= unlocked ? '🔓' : '🔒'}`;
-                btn.onclick = () => { if(lvl <= unlocked) startLevel(lvl); };
-                cont.appendChild(btn);
+            const container = document.getElementById('levels-path');
+            container.innerHTML = '';
+            
+            animalList.forEach((name, i) => {
+                const lvl = i + 1;
+                const node = document.createElement('div');
+                node.className = `level-node ${lvl < unlocked ? 'level-unlocked' : (lvl === unlocked ? 'level-current' : '')}`;
+                
+                // Pozitionare in zig-zag pentru harta
+                const marginSide = (i % 2 === 0) ? '20%' : '60%';
+                node.style.marginLeft = marginSide;
+                
+                node.innerText = lvl <= unlocked ? lvl : '🔒';
+                node.id = `node-${lvl}`;
+                node.onclick = () => { if(lvl <= unlocked) startLevel(lvl); };
+                container.appendChild(node);
             });
+            
             updateUI();
+            setTimeout(movePenguin, 100);
+        }
+
+        function movePenguin() {
+            const currentNode = document.getElementById(`node-${unlocked}`);
+            const avatar = document.getElementById('penguin-avatar');
+            if(currentNode && avatar) {
+                const rect = currentNode.getBoundingClientRect();
+                const scrollPos = window.scrollY;
+                avatar.style.top = (currentNode.offsetTop - 60) + 'px';
+                avatar.style.left = (currentNode.offsetLeft - 5) + 'px';
+                
+                // Auto-scroll la pinguin
+                currentNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         }
 
         function startLevel(id) {
-            const animalName = animalList[(id - 1) % animalList.length];
-            // Mesaj Catchy
-            document.getElementById('animal-message').innerText = `✨ Animalul este: ${animalName}! Spor la ordonat! ✨`;
-            
-            const curImg = `https://image.pollinations.ai/prompt/cute_cartoon_${animalName}_bright_colors_for_kids?width=300&height=300`;
-            currentTiles = [0, 1, 2, 3, 4, 5, 6, 7, null];
+            const name = animalList[id-1];
+            document.getElementById('animal-msg').innerText = `✨ Pinguinul a găsit un ${name}! ✨`;
+            const img = `https://image.pollinations.ai/prompt/cute_cartoon_${name}_bright_colors_for_kids?width=300&height=300`;
+            curTiles = [0,1,2,3,4,5,6,7,null];
             showScreen('screen-game');
-            
-            // Desenăm board-ul și amestecăm
-            drawBoard(curImg);
-            setTimeout(() => shuffle(curImg), 600);
+            drawBoard(img);
+            shuffle(img);
         }
 
-        let currentTiles = [];
+        // Logica de puzzle (pe scurt pentru functionalitate)
+        let curTiles = [];
         function drawBoard(img) {
             const b = document.getElementById('puzzle-board');
             b.innerHTML = '';
-            currentTiles.forEach((t, i) => {
+            curTiles.forEach((t, i) => {
                 const tile = document.createElement('div');
                 tile.className = 'tile';
-                if (t !== null) {
+                if(t !== null) {
                     tile.style.backgroundImage = `url('${img}')`;
-                    tile.style.backgroundPosition = `-${(t%3)*105}px -${Math.floor(t/3)*105}px`;
-                    tile.onclick = () => handleMove(i, img);
-                } else { tile.style.background = "#fff"; }
+                    tile.style.backgroundPosition = `-${(t%3)*100}px -${Math.floor(t/3)*100}px`;
+                    tile.onclick = () => { moveTile(i, img); };
+                } else tile.style.background = "#fff";
                 b.appendChild(tile);
             });
         }
 
-        function handleMove(i, img) {
-            const empty = currentTiles.indexOf(null);
-            if (Math.abs(Math.floor(i/3)-Math.floor(empty/3)) + Math.abs(i%3-empty%3) === 1) {
-                [currentTiles[i], currentTiles[empty]] = [currentTiles[empty], currentTiles[i]];
+        function moveTile(i, img) {
+            const empty = curTiles.indexOf(null);
+            if(Math.abs(Math.floor(i/3)-Math.floor(empty/3)) + Math.abs(i%3-empty%3) === 1) {
+                [curTiles[i], curTiles[empty]] = [curTiles[empty], curTiles[i]];
                 drawBoard(img);
-                if (currentTiles.every((t, i) => t === null ? i === 8 : t === i)) {
-                    stars += 10;
-                    if(unlocked < animalList.length) unlocked++;
-                    alert("🎉 Excelent! Ai salvat animalul!");
+                if(curTiles.every((t,idx) => t === null ? idx === 8 : t === idx)) {
+                    stars += 15; unlocked++;
+                    localStorage.setItem('p_stars', stars);
+                    localStorage.setItem('p_unlocked', unlocked);
+                    alert("Ai castigat!");
                     showScreen('screen-map');
                     initMap();
                 }
@@ -124,11 +157,11 @@
         }
 
         function shuffle(img) {
-            for(let i=0; i<40; i++) {
-                const empty = currentTiles.indexOf(null);
+            for(let i=0; i<30; i++) {
+                const empty = curTiles.indexOf(null);
                 const n = [empty-1, empty+1, empty-3, empty+3].filter(x => x>=0 && x<9 && (Math.abs(Math.floor(x/3)-Math.floor(empty/3)) + Math.abs(x%3-empty%3) === 1));
                 const r = n[Math.floor(Math.random()*n.length)];
-                [currentTiles[r], currentTiles[empty]] = [currentTiles[empty], currentTiles[r]];
+                [curTiles[r], curTiles[empty]] = [curTiles[empty], curTiles[r]];
             }
             drawBoard(img);
         }
@@ -136,17 +169,11 @@
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
+            if(id === 'screen-map') setTimeout(movePenguin, 300);
         }
 
-        function claimDaily() {
-            const now = new Date().getTime();
-            if (now - lastDaily >= 86400000) {
-                stars += 50;
-                localStorage.setItem('p_daily', now);
-                alert("🎁 50 de stele cadou!");
-                updateUI();
-            } else { alert("Ai primit deja cadoul azi!"); }
-        }
+        function updateUI() { document.getElementById('stars-val').innerText = stars; }
+        function claimDaily() { stars += 50; updateUI(); alert("50 Stele!"); }
 
         initMap();
     </script>
