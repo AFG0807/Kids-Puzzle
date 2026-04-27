@@ -3,43 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pingu Quest Pro</title>
+    <title>Pingu Quest Ultimate</title>
     <style>
         :root { --p-blue: #00A8FF; --p-pink: #FF4D91; --p-green: #4CD137; }
         
-        /* BLOCARE REFRESH PE MOBIL */
+        /* BLOCARE TOTALĂ REFRESH ȘI SCROLL */
         html, body { 
-            overscroll-behavior-y: contain; /* Oprește pull-to-refresh */
-            overflow: hidden; 
-            position: fixed; width: 100%; height: 100%;
-            margin: 0; padding: 0; font-family: 'Comic Sans MS', cursive;
-            background: #E0F7FA; touch-action: none; 
+            overscroll-behavior: none !important;
+            overflow: hidden !important;
+            position: fixed; 
+            width: 100%; height: 100%;
+            margin: 0; padding: 0;
+            background: #E0F7FA;
+            touch-action: none; /* Interzice orice gest de browser */
         }
 
-        .screen { display: none; height: 100vh; width: 100vw; flex-direction: column; align-items: center; }
+        .screen { display: none; height: 100%; width: 100%; flex-direction: column; align-items: center; }
         .active { display: flex; }
 
-        /* POP-UP PERSONALIZAT */
+        /* POP-UP VICTORIE */
         #win-popup {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: white; padding: 30px; border-radius: 30px; border: 8px solid var(--p-green);
-            text-align: center; z-index: 5000; box-shadow: 0 0 50px rgba(0,0,0,0.5); width: 80%;
+            text-align: center; z-index: 9999; box-shadow: 0 0 100px rgba(0,0,0,0.5); width: 280px;
         }
 
-        /* Harta & Pinguin */
-        #map-container { width: 100%; position: relative; padding: 40px 0; background: #b2ebf2; min-height: 500px; }
-        .level-node { width: 65px; height: 65px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; border: 5px solid #ccc; position: relative; margin-bottom: 40px; color: #999; }
+        /* Harta */
+        #map-container { width: 100%; height: 100%; position: relative; background: #b2ebf2; overflow-y: auto; touch-action: pan-y; }
+        .level-node { width: 70px; height: 70px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; border: 6px solid #ccc; position: relative; margin: 30px auto; color: #999; }
         .level-unlocked { border-color: var(--p-blue); color: var(--p-blue); }
-        .level-current { border-color: var(--p-green); background: var(--p-green); color: white; scale: 1.1; }
+        .level-current { border-color: var(--p-green); background: var(--p-green); color: white; transform: scale(1.1); }
         
         #penguin-avatar {
-            position: absolute; width: 70px; height: 70px; z-index: 10;
-            background: url('https://cdn-icons-png.flaticon.com/512/2823/2823055.png') no-repeat center;
-            background-size: contain; transition: all 0.5s ease;
+            position: absolute; width: 60px; height: 60px; z-index: 10;
+            background: url('https://cdn-icons-png.flaticon.com/512/2823/2823055.png') no-repeat center/contain;
+            transition: all 0.4s ease;
         }
 
         /* Puzzle Game */
-        #game-area { position: relative; width: 320px; height: 600px; margin-top: 10px; }
+        #game-area { position: relative; width: 320px; height: 100%; margin-top: 10px; flex-shrink: 0; }
         #puzzle-slots { 
             display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); 
             gap: 5px; border: 8px solid white; border-radius: 15px; background: rgba(255,255,255,0.5); padding: 5px;
@@ -47,41 +49,45 @@
         .slot { width: 100px; height: 100px; background: rgba(255,255,255,0.3); border-radius: 8px; }
         .piece { 
             width: 100px; height: 100px; background-size: 300px 300px; border-radius: 10px; 
-            position: absolute; touch-action: none; z-index: 100; box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            position: absolute; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            touch-action: none;
         }
 
-        .top-bar { width: 100%; height: 50px; background: white; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .btn { padding: 10px 25px; border: none; border-radius: 20px; font-weight: bold; color: white; background: var(--p-blue); }
+        .top-bar { width: 100%; height: 60px; background: white; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1000; }
+        .btn { padding: 12px 25px; border: none; border-radius: 50px; font-weight: bold; color: white; background: var(--p-blue); font-size: 16px; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
     <div id="win-popup">
         <h1 style="color: var(--p-green); margin: 0;">🎉 BRAVO! 🎉</h1>
-        <p style="font-size: 18px;">Ai rezolvat puzzle-ul!</p>
-        <button class="btn" style="background: var(--p-green); font-size: 20px;" onclick="closeWinPopup()">OK!</button>
+        <p>Puzzle rezolvat cu succes!</p>
+        <button class="btn" style="background: var(--p-green);" onclick="closeWinPopup()">HARTĂ</button>
     </div>
 
     <div class="top-bar">
-        <div style="font-size: 20px;">⭐ <span id="stars-val">0</span></div>
+        <div style="font-size: 22px;">⭐ <span id="stars-val">0</span></div>
         <button class="btn" onclick="showScreen('screen-map')">HARTĂ</button>
     </div>
 
     <div id="screen-map" class="screen active">
         <div id="map-container">
             <div id="penguin-avatar"></div>
-            <div id="levels-path" style="display: flex; flex-direction: column; align-items: center;"></div>
+            <div id="levels-path"></div>
         </div>
     </div>
 
     <div id="screen-game" class="screen">
-        <h3 id="animal-msg" style="color: var(--p-pink); margin: 10px;"></h3>
+        <h2 id="animal-msg" style="color: var(--p-pink); margin: 10px;"></h2>
         <div id="game-area">
             <div id="puzzle-slots"></div>
         </div>
     </div>
 
     <script>
+        // Prevenire scroll/refresh forțată din JS
+        window.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
+
         let stars = parseInt(localStorage.getItem('pingu_stars')) || 0;
         let unlocked = parseInt(localStorage.getItem('pingu_unlocked')) || 1;
         
@@ -89,8 +95,7 @@
             { name: "Leu", img: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=300" },
             { name: "Elefant", img: "https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=300" },
             { name: "Zebra", img: "https://images.unsplash.com/photo-1526095179574-86e545346ce6?w=300" },
-            { name: "Panda", img: "https://images.unsplash.com/photo-1564349683136-77e08bef1ef1?w=300" },
-            { name: "Tigru", img: "https://images.unsplash.com/photo-1508013861974-9f63475c58b5?w=300" }
+            { name: "Panda", img: "https://images.unsplash.com/photo-1564349683136-77e08bef1ef1?w=300" }
         ];
 
         function initMap() {
@@ -99,8 +104,6 @@
             animalLevels.forEach((lvl, i) => {
                 const node = document.createElement('div');
                 node.className = `level-node ${i+1 < unlocked ? 'level-unlocked' : (i+1 === unlocked ? 'level-current' : '')}`;
-                node.style.alignSelf = (i % 2 === 0) ? 'flex-start' : 'flex-end';
-                node.style.margin = "0 50px 30px 50px";
                 node.innerText = i+1 <= unlocked ? i+1 : '🔒';
                 node.id = `node-${i+1}`;
                 node.onclick = () => { if(i+1 <= unlocked) startLevel(i+1); };
@@ -114,14 +117,14 @@
             const node = document.getElementById(`node-${unlocked}`);
             const pingu = document.getElementById('penguin-avatar');
             if(node && pingu) {
-                pingu.style.top = (node.offsetTop - 55) + 'px';
-                pingu.style.left = (node.offsetLeft - 5) + 'px';
+                pingu.style.top = (node.offsetTop + 5) + 'px';
+                pingu.style.left = (node.offsetLeft + 5) + 'px';
             }
         }
 
         function startLevel(id) {
             const data = animalLevels[id-1];
-            document.getElementById('animal-msg').innerText = `Animalul: ${data.name}`;
+            document.getElementById('animal-msg').innerText = "Găsește: " + data.name;
             showScreen('screen-game');
             setupPuzzle(data.img + "?v=" + id);
         }
@@ -146,56 +149,48 @@
                 p.dataset.correct = pIdx;
                 p.style.backgroundImage = `url('${imgUrl}')`;
                 p.style.backgroundPosition = `-${(pIdx%3)*100}px -${Math.floor(pIdx/3)*100}px`;
-                p.style.top = (320 + Math.floor(i/3) * 105) + 'px';
-                p.style.left = (5 + (i%3) * 105) + 'px';
-                attachEvents(p);
+                p.style.top = (330 + Math.floor(i/3) * 110) + 'px';
+                p.style.left = (5 + (i%3) * 110) + 'px';
+                
+                // DRAG LOGIC REFILCUITĂ
+                let startX, startY, initX, initY;
+                
+                p.addEventListener('touchstart', function(e) {
+                    const t = e.touches[0];
+                    startX = t.clientX; startY = t.clientY;
+                    initX = p.offsetLeft; initY = p.offsetTop;
+                    p.style.zIndex = 1000;
+                }, {passive: false});
+
+                p.addEventListener('touchmove', function(e) {
+                    e.preventDefault();
+                    const t = e.touches[0];
+                    p.style.left = (initX + (t.clientX - startX)) + 'px';
+                    p.style.top = (initY + (t.clientY - startY)) + 'px';
+                }, {passive: false});
+
+                p.addEventListener('touchend', function(e) {
+                    p.style.zIndex = 100;
+                    const rect = p.getBoundingClientRect();
+                    const cx = rect.left + 50, cy = rect.top + 50;
+                    let snapped = false;
+
+                    document.querySelectorAll('.slot').forEach(s => {
+                        const r = s.getBoundingClientRect();
+                        if(cx > r.left && cx < r.right && cy > r.top && cy < r.bottom) {
+                            const area = gameArea.getBoundingClientRect();
+                            p.style.left = (r.left - area.left) + 'px';
+                            p.style.top = (r.top - area.top) + 'px';
+                            p.dataset.slot = s.dataset.idx;
+                            snapped = true;
+                            checkWin();
+                        }
+                    });
+                    if(!snapped) p.dataset.slot = -1;
+                });
+
                 gameArea.appendChild(p);
             });
-        }
-
-        function attachEvents(el) {
-            let active = false, offset = {x:0, y:0};
-
-            const start = (e) => {
-                active = true;
-                el.style.zIndex = 1000;
-                const t = e.type.includes('touch') ? e.touches[0] : e;
-                const r = el.getBoundingClientRect();
-                offset.x = t.clientX - r.left;
-                offset.y = t.clientY - r.top;
-            };
-
-            const move = (e) => {
-                if(!active) return;
-                e.preventDefault(); // CRITIC: Oprește refresh-ul paginii
-                const t = e.type.includes('touch') ? e.touches[0] : e;
-                const area = document.getElementById('game-area').getBoundingClientRect();
-                el.style.left = (t.clientX - area.left - offset.x) + 'px';
-                el.style.top = (t.clientY - area.top - offset.y) + 'px';
-            };
-
-            const end = () => {
-                if(!active) return; active = false; el.style.zIndex = 100;
-                const rect = el.getBoundingClientRect();
-                const cx = rect.left + 50, cy = rect.top + 50;
-                let snapped = false;
-
-                document.querySelectorAll('.slot').forEach(s => {
-                    const r = s.getBoundingClientRect();
-                    if(cx > r.left && cx < r.right && cy > r.top && cy < r.bottom) {
-                        const area = document.getElementById('game-area').getBoundingClientRect();
-                        el.style.left = (r.left - area.left) + 'px';
-                        el.style.top = (r.top - area.top) + 'px';
-                        el.dataset.slot = s.dataset.idx;
-                        snapped = true; checkWin();
-                    }
-                });
-                if(!snapped) el.dataset.slot = -1;
-            };
-
-            el.addEventListener('touchstart', start, {passive: false});
-            window.addEventListener('touchmove', move, {passive: false});
-            window.addEventListener('touchend', end);
         }
 
         function checkWin() {
@@ -205,8 +200,8 @@
                 document.getElementById('win-popup').style.display = 'block';
                 if(unlocked < animalLevels.length) unlocked++;
                 stars += 20;
-                localStorage.setItem('pingu_unlocked', unlocked);
                 localStorage.setItem('pingu_stars', stars);
+                localStorage.setItem('pingu_unlocked', unlocked);
             }
         }
 
@@ -219,7 +214,7 @@
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            if(id === 'screen-map') setTimeout(initMap, 50);
+            if(id === 'screen-map') setTimeout(initMap, 100);
         }
 
         initMap();
