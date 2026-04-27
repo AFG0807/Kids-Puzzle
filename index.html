@@ -3,151 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gigi Puzzle Adventure</title>
+    <title>Penguin Quest: Learning Edition</title>
     <style>
-        :root { --p-pink: #FF61A6; --p-blue: #5CC9FF; --p-yellow: #FFD93D; --p-green: #6BCB77; }
-        body { background: #FFF9F0; font-family: 'Comic Sans MS', cursive, sans-serif; margin: 0; overflow: hidden; user-select: none; }
-        .screen { display: none; height: 100vh; width: 100vw; flex-direction: column; align-items: center; justify-content: center; }
+        :root { --p-blue: #00A8FF; --p-yellow: #FFCE00; --p-pink: #FF4D91; --p-green: #4CD137; }
+        body { background: #E0F7FA; font-family: 'Comic Sans MS', cursive; margin: 0; overflow: hidden; touch-action: none; }
+        .screen { display: none; height: 100vh; width: 100vw; flex-direction: column; align-items: center; }
         .active { display: flex; }
-        h1 { color: var(--p-pink); text-shadow: 3px 3px 0px white; font-size: 32px; margin: 10px 0; }
-        .stats-bar { position: absolute; top: 20px; width: 90%; display: flex; justify-content: space-between; font-size: 20px; font-weight: bold; color: #555; }
-        .level-grid { display: grid; grid-template-columns: repeat(3, 85px); gap: 15px; margin-top: 10px; }
-        .level-node { 
-            width: 80px; height: 80px; background: white; border-radius: 20px; display: flex; align-items: center; 
-            justify-content: center; font-size: 28px; font-weight: bold; border: 4px solid var(--p-blue); color: var(--p-blue);
-            box-shadow: 0 5px 0 var(--p-blue); cursor: pointer; position: relative;
+        
+        /* Mesaj Catchy */
+        #animal-message { 
+            background: white; padding: 10px 20px; border-radius: 20px; margin: 10px;
+            border: 3px solid var(--p-pink); color: #d81b60; font-size: 18px; font-weight: bold;
+            box-shadow: 0 4px 0 #fce4ec; animation: bounce 2s infinite;
         }
-        .level-node.locked { background: #E0E0E0; border-color: #999; color: #999; box-shadow: 0 5px 0 #999; cursor: not-allowed; }
-        .level-node.locked::after { content: '🔒'; position: absolute; font-size: 16px; bottom: 5px; }
-        #puzzle-board { 
-            display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px); 
-            gap: 5px; border: 8px solid white; border-radius: 20px; background: #DDD; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-        .tile { width: 100px; height: 100px; background-size: 300px 300px; border-radius: 10px; cursor: pointer; }
-        .btn { padding: 12px 25px; border: none; border-radius: 50px; font-size: 18px; font-weight: bold; color: white; cursor: pointer; margin: 10px; box-shadow: 0 5px 0 rgba(0,0,0,0.2); }
-        .btn-hint { background: var(--p-yellow); color: #555; }
-        .btn-back { background: var(--p-pink); margin-top: 20px; }
-        #win-popup { 
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            background: white; padding: 30px; border-radius: 30px; text-align: center; z-index: 100;
-            border: 8px solid var(--p-yellow); box-shadow: 0 0 100px rgba(0,0,0,0.5);
-        }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        .top-bar { width: 100%; height: 60px; background: white; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 10; }
+        #puzzle-board { display: grid; grid-template-columns: repeat(3, 105px); grid-template-rows: repeat(3, 105px); gap: 8px; border: 10px solid white; border-radius: 20px; background: #cfd8dc; }
+        .tile { width: 105px; height: 105px; background-size: 315px 315px; border-radius: 12px; }
+        .particle { position: absolute; pointer-events: none; width: 10px; height: 10px; background: var(--p-yellow); border-radius: 50%; z-index: 1000; }
+        .btn { padding: 12px 25px; border: none; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; color: white; box-shadow: 0 5px 0 rgba(0,0,0,0.2); margin: 5px; }
     </style>
 </head>
 <body>
 
-    <div id="screen-levels" class="screen active">
-        <h1>Gigi Puzzle 🧩</h1>
-        <div class="stats-bar"><span>⭐ <span id="total-stars">0</span></span></div>
-        <div class="level-grid" id="level-container"></div>
+    <div class="top-bar">
+        <div style="font-size: 20px; font-weight: bold;">⭐ <span id="stars-val">0</span></div>
+        <button id="daily-btn" style="background:var(--p-pink); border:none; padding:8px 15px; border-radius:20px; color:white; font-weight:bold;" onclick="claimDaily()">🎁 CADOU</button>
+        <button class="btn" style="background:var(--p-blue); padding:8px 15px;" onclick="showScreen('screen-map')">🗺️ HARTĂ</button>
     </div>
 
     <div id="screen-game" class="screen">
-        <div class="stats-bar"><span id="game-lvl-title">Nivel 1</span></div>
+        <div id="animal-message">🔍 Hm, ce animal se ascunde aici?</div>
         <div id="puzzle-board"></div>
-        <button class="btn btn-hint" onclick="showHint()">HINT (Ad)</button>
-        <button class="btn btn-back" onclick="showScreen('screen-levels')">MENIU</button>
+        <div style="margin-top:20px;">
+            <button class="btn" style="background:var(--p-green)" onclick="showAdHint()">HINT (Ad)</button>
+            <button class="btn" style="background:var(--p-blue)" onclick="showScreen('screen-map')">BACK</button>
+        </div>
     </div>
 
-    <div id="win-popup">
-        <h2 style="color: var(--p-green)">BRAVO! 🎉</h2>
-        <button class="btn" style="background:var(--p-green)" onclick="closeWinPopup()">URMĂTORUL</button>
+    <div id="screen-map" class="screen active">
+        <h2 style="color:var(--p-blue)">Aventura lui Pingu</h2>
+        <div id="map-content" style="width:100%; overflow-y:auto; text-align:center;"></div>
     </div>
 
     <script>
-        let score = 0, unlockedLevel = 1, currentLevel = 1, tiles = [];
-        const levels = [
-            { id: 1, img: 'https://image.pollinations.ai/prompt/cute_lion_cartoon_vibrant?width=300&height=300' },
-            { id: 2, img: 'https://image.pollinations.ai/prompt/cute_panda_cartoon_vibrant?width=300&height=300' },
-            { id: 3, img: 'https://image.pollinations.ai/prompt/cute_elephant_cartoon_vibrant?width=300&height=300' },
-            { id: 4, img: 'https://image.pollinations.ai/prompt/cute_dino_cartoon_vibrant?width=300&height=300' },
-            { id: 5, img: 'https://image.pollinations.ai/prompt/cute_cat_cartoon_vibrant?width=300&height=300' },
-            { id: 6, img: 'https://image.pollinations.ai/prompt/cute_dog_cartoon_vibrant?width=300&height=300' }
+        let stars = parseInt(localStorage.getItem('p_stars')) || 0;
+        let unlocked = parseInt(localStorage.getItem('p_unlocked')) || 1;
+        let lastDaily = localStorage.getItem('p_daily') || 0;
+
+        // Lista de animale pentru AI și mesaje
+        const animalList = [
+            "Cățeluș", "Pisicuță", "Elefant", "Leu", "Panda", "Iepuraș", "Pinguin", "Girafe", "Maimuță", "Tigru",
+            "Văcuță", "Oaie", "Păun", "Zebra", "Dinozaur", "Vulpe", "Ursuleț", "Hamster", "Papagal", "Delfin"
         ];
 
-        function initLevelMenu() {
-            const container = document.getElementById('level-container');
-            container.innerHTML = '';
-            levels.forEach(lvl => {
-                const node = document.createElement('div');
-                node.className = `level-node ${lvl.id > unlockedLevel ? 'locked' : ''}`;
-                node.innerText = lvl.id;
-                node.onclick = () => { if(lvl.id <= unlockedLevel) startLevel(lvl.id); };
-                container.appendChild(node);
+        function updateUI() {
+            document.getElementById('stars-val').innerText = stars;
+            localStorage.setItem('p_stars', stars);
+            localStorage.setItem('p_unlocked', unlocked);
+        }
+
+        function initMap() {
+            const cont = document.getElementById('map-content');
+            cont.innerHTML = '';
+            animalList.forEach((name, index) => {
+                const lvl = index + 1;
+                const btn = document.createElement('div');
+                btn.style = `width:80%; background:white; margin:10px auto; padding:15px; border-radius:20px; border:4px solid ${lvl <= unlocked ? '#00A8FF' : '#ccc'}`;
+                btn.innerHTML = `<b>Nivel ${lvl}</b> ${lvl <= unlocked ? '🔓' : '🔒'}`;
+                btn.onclick = () => { if(lvl <= unlocked) startLevel(lvl); };
+                cont.appendChild(btn);
             });
-            document.getElementById('total-stars').innerText = score;
+            updateUI();
+        }
+
+        function startLevel(id) {
+            const animalName = animalList[(id - 1) % animalList.length];
+            // Mesaj Catchy
+            document.getElementById('animal-message').innerText = `✨ Animalul este: ${animalName}! Spor la ordonat! ✨`;
+            
+            const curImg = `https://image.pollinations.ai/prompt/cute_cartoon_${animalName}_bright_colors_for_kids?width=300&height=300`;
+            currentTiles = [0, 1, 2, 3, 4, 5, 6, 7, null];
+            showScreen('screen-game');
+            
+            // Desenăm board-ul și amestecăm
+            drawBoard(curImg);
+            setTimeout(() => shuffle(curImg), 600);
+        }
+
+        let currentTiles = [];
+        function drawBoard(img) {
+            const b = document.getElementById('puzzle-board');
+            b.innerHTML = '';
+            currentTiles.forEach((t, i) => {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                if (t !== null) {
+                    tile.style.backgroundImage = `url('${img}')`;
+                    tile.style.backgroundPosition = `-${(t%3)*105}px -${Math.floor(t/3)*105}px`;
+                    tile.onclick = () => handleMove(i, img);
+                } else { tile.style.background = "#fff"; }
+                b.appendChild(tile);
+            });
+        }
+
+        function handleMove(i, img) {
+            const empty = currentTiles.indexOf(null);
+            if (Math.abs(Math.floor(i/3)-Math.floor(empty/3)) + Math.abs(i%3-empty%3) === 1) {
+                [currentTiles[i], currentTiles[empty]] = [currentTiles[empty], currentTiles[i]];
+                drawBoard(img);
+                if (currentTiles.every((t, i) => t === null ? i === 8 : t === i)) {
+                    stars += 10;
+                    if(unlocked < animalList.length) unlocked++;
+                    alert("🎉 Excelent! Ai salvat animalul!");
+                    showScreen('screen-map');
+                    initMap();
+                }
+            }
+        }
+
+        function shuffle(img) {
+            for(let i=0; i<40; i++) {
+                const empty = currentTiles.indexOf(null);
+                const n = [empty-1, empty+1, empty-3, empty+3].filter(x => x>=0 && x<9 && (Math.abs(Math.floor(x/3)-Math.floor(empty/3)) + Math.abs(x%3-empty%3) === 1));
+                const r = n[Math.floor(Math.random()*n.length)];
+                [currentTiles[r], currentTiles[empty]] = [currentTiles[empty], currentTiles[r]];
+            }
+            drawBoard(img);
         }
 
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            if(id === 'screen-levels') initLevelMenu();
         }
 
-        function startLevel(id) {
-            currentLevel = id;
-            document.getElementById('game-lvl-title').innerText = "Nivel " + id;
-            tiles = [0, 1, 2, 3, 4, 5, 6, 7, null];
-            showScreen('screen-game');
-            renderBoard();
-            setTimeout(shuffle, 500);
+        function claimDaily() {
+            const now = new Date().getTime();
+            if (now - lastDaily >= 86400000) {
+                stars += 50;
+                localStorage.setItem('p_daily', now);
+                alert("🎁 50 de stele cadou!");
+                updateUI();
+            } else { alert("Ai primit deja cadoul azi!"); }
         }
 
-        function renderBoard() {
-            const board = document.getElementById('puzzle-board');
-            board.innerHTML = '';
-            const imgUrl = levels.find(l => l.id === currentLevel).img;
-            tiles.forEach((t, i) => {
-                const tile = document.createElement('div');
-                tile.className = 'tile';
-                if (t !== null) {
-                    tile.style.backgroundImage = `url('${imgUrl}')`;
-                    tile.style.backgroundPosition = `-${(t % 3) * 100}px -${Math.floor(t / 3) * 100}px`;
-                    tile.onclick = () => swap(i);
-                } else { tile.style.background = "#FFF"; }
-                board.appendChild(tile);
-            });
-        }
-
-        function shuffle() {
-            for (let i = 0; i < 30; i++) {
-                const empty = tiles.indexOf(null);
-                const neighbors = [empty-1, empty+1, empty-3, empty+3].filter(idx => idx >= 0 && idx < 9 && isAdjacent(idx, empty));
-                const rand = neighbors[Math.floor(Math.random() * neighbors.length)];
-                [tiles[rand], tiles[tiles.indexOf(null)]] = [tiles[tiles.indexOf(null)], tiles[rand]];
-            }
-            renderBoard();
-        }
-
-        function isAdjacent(i, j) {
-            const r1 = Math.floor(i/3), c1 = i%3, r2 = Math.floor(j/3), c2 = j%3;
-            return Math.abs(r1-r2) + Math.abs(c1-c2) === 1;
-        }
-
-        function swap(i) {
-            const empty = tiles.indexOf(null);
-            if (isAdjacent(i, empty)) {
-                [tiles[i], tiles[empty]] = [tiles[empty], tiles[i]];
-                renderBoard();
-                if (tiles.every((t, i) => t === null ? i === 8 : t === i)) {
-                    score += 10;
-                    if(currentLevel === unlockedLevel) unlockedLevel++;
-                    document.getElementById('win-popup').style.display = 'block';
-                }
-            }
-        }
-
-        function closeWinPopup() {
-            document.getElementById('win-popup').style.display = 'none';
-            showScreen('screen-levels');
-        }
-
-        function showHint() {
-            alert("Se încarcă reclama...");
-            setTimeout(() => { tiles = [0, 1, 2, 3, 4, 5, 6, 7, null]; renderBoard(); }, 1500);
-        }
-
-        initLevelMenu();
+        initMap();
     </script>
 </body>
 </html>
